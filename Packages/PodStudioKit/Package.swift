@@ -47,7 +47,10 @@ let package = Package(
         ),
         .target(
             name: "StudioServices",
-            dependencies: ["StudioCore", "LAMEKit"]
+            dependencies: ["StudioCore", "LAMEKit"],
+            // Apple frameworks (AVFoundation, GroupActivities, CloudKit) are not yet fully
+            // annotated for strict concurrency; switch to .v6 once it builds warning-free.
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .executableTarget(
             name: "pstool",

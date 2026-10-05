@@ -1,0 +1,25 @@
+name: PodStudioKit core tests
+
+on:
+  push:
+    paths: ["Packages/PodStudioKit/**", ".github/workflows/core-tests.yml"]
+  pull_request:
+    paths: ["Packages/PodStudioKit/**", ".github/workflows/core-tests.yml"]
+
+jobs:
+  linux:
+    # StudioCore, LAMEKit and pstool are platform-independent; the Apple-only
+    # StudioServices sources compile out on Linux.
+    runs-on: ubuntu-latest
+    container: swift:6.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        working-directory: Packages/PodStudioKit
+        run: swift test
+      - name: Loudness acceptance (Loop 1/4)
+        working-directory: Packages/PodStudioKit
+        run: |
+          swift build -c release --product pstool
+          .build/release/pstool synth --out /tmp/ps --seconds 30
+          .build/release/pstool render --out /tmp/ps/out /tmp/ps/speaker*.wav

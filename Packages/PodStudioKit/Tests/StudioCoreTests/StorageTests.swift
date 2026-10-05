@@ -150,4 +150,16 @@ final class SessionStoreTests: XCTestCase {
         XCTAssertEqual(try store.load(done.id).state, .finished)
         XCTAssertTrue(RecoveryScanner(store: store).scan().isEmpty, "recovery is idempotent")
     }
+
+    func testSegmentsResolveToSharedClock() {
+        var t = TrackInfo(participantID: UUID(), displayName: "x", relativePath: "a.wav", format: .wav,
+                          segments: [RecordingSegment(window: 0, sharedStart: 10, fileFrameOffset: 0, frameCount: 5)])
+        XCTAssertEqual(t.sharedSegments.first?.sharedStart, 10)
+        t.clockOffset = 1000.25
+        XCTAssertEqual(t.sharedSegments.first?.sharedStart, 1010.25)
+        let resolved = t.resolvedToSharedClock()
+        XCTAssertNil(resolved.clockOffset)
+        XCTAssertEqual(resolved.segments.first?.sharedStart, 1010.25)
+        XCTAssertEqual(resolved.sharedSegments, resolved.segments)
+    }
 }

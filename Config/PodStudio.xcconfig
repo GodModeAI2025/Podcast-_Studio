@@ -1,0 +1,9 @@
+// PodStudio build configuration.
+//
+// Set your own bundle ID and team here (or in an untracked Config/Local.xcconfig).
+// The iCloud container is derived from the bundle ID: iCloud.<bundle id>.
+
+PODSTUDIO_BUNDLE_ID = app.podstudio.PodStudio
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"

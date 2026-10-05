@@ -35,6 +35,10 @@ public struct TrackInfo: Codable, Sendable, Equatable, Identifiable {
     public var frameCount: Int64
     public var segments: [RecordingSegment]
     public var createdAt: Date
+    /// While recording, segment times are stamped on the **local** host clock; this is the
+    /// latest estimate of (shared − local). It keeps improving during the session, so the
+    /// conversion happens as late as possible (upload / mix). `nil` = already shared time.
+    public var clockOffset: TimeInterval?
 
     public init(participantID: UUID, displayName: String, relativePath: String, format: TrackFileFormat,
                 sampleRate: Int = 48_000, channels: Int = 1, frameCount: Int64 = 0,
@@ -51,6 +55,20 @@ public struct TrackInfo: Codable, Sendable, Equatable, Identifiable {
     }
 
     public var duration: TimeInterval { Double(frameCount) / Double(sampleRate) }
+
+    /// Segments on the shared session clock.
+    public var sharedSegments: [RecordingSegment] {
+        guard let offset = clockOffset, offset != 0 else { return segments }
+        return segments.map { var s = $0; s.sharedStart += offset; return s }
+    }
+
+    /// Copy with segments converted to the shared clock (for delivery to the owner).
+    public func resolvedToSharedClock() -> TrackInfo {
+        var t = self
+        t.segments = sharedSegments
+        t.clockOffset = nil
+        return t
+    }
 }
 
 public enum RecordingState: String, Codable, Sendable {
@@ -79,11 +97,15 @@ public struct SessionManifest: Codable, Sendable, Equatable, Identifiable {
     public var scriptRevision: Int
     /// Owner only: CloudKit zone name used for delivery (deleted after mixing).
     public var deliveryZoneName: String?
+    /// Share URL of the owner's delivery zone (participants keep it to retry uploads,
+    /// e.g. after a crash or when they were offline at the end of the session).
+    public var deliveryShareURL: URL?
 
     public init(id: UUID = UUID(), title: String, createdAt: Date = Date(), ownerID: UUID,
                 localParticipantID: UUID, participants: [ParticipantInfo] = [], windows: [RecordingWindow] = [],
                 markers: [Marker] = [], state: RecordingState = .idle, localTrack: TrackInfo? = nil,
-                receivedTracks: [TrackInfo] = [], scriptRevision: Int = 0, deliveryZoneName: String? = nil) {
+                receivedTracks: [TrackInfo] = [], scriptRevision: Int = 0, deliveryZoneName: String? = nil,
+                deliveryShareURL: URL? = nil) {
         self.id = id
         self.title = title
         self.createdAt = createdAt
@@ -97,6 +119,7 @@ public struct SessionManifest: Codable, Sendable, Equatable, Identifiable {
         self.receivedTracks = receivedTracks
         self.scriptRevision = scriptRevision
         self.deliveryZoneName = deliveryZoneName
+        self.deliveryShareURL = deliveryShareURL
     }
 
     public var isOwner: Bool { ownerID == localParticipantID }

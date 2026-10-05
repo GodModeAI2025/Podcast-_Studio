@@ -1,0 +1,352 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		27F051129CA214DF4BAA9B22 /* StudioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 76A83A60768CF2762B15F953 /* StudioCore */; };
+		FF0E15E3D7201122EFFD74CA /* StudioServices in Frameworks */ = {isa = PBXBuildFile; productRef = FA91A0B10CF8A1162D4B0E00 /* StudioServices */; };
+		DE6CB366CFAF5E8EE25FAD46 /* LAMEKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3312898796FFCE0D08005A31 /* LAMEKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0AEFE66E0261EC01A880E60F /* PodStudio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PodStudio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		90B9761DCFC5FE5B8FBA212F /* PodStudio.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PodStudio.xcconfig; sourceTree = "<group>"; };
+		DD0FE4DED56A70F767BA3FCE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1946ABF13591D830335B31A3 /* PodStudio-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "PodStudio-iOS.entitlements"; sourceTree = "<group>"; };
+		5C41A0A77E42DA0E02DD0F98 /* PodStudio-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "PodStudio-macOS.entitlements"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0BDAB6E3AE66717795C8EF46 /* PodStudio */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PodStudio;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8EC129A5AAA51F83325576CD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27F051129CA214DF4BAA9B22 /* StudioCore in Frameworks */,
+				FF0E15E3D7201122EFFD74CA /* StudioServices in Frameworks */,
+				DE6CB366CFAF5E8EE25FAD46 /* LAMEKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		42EB01B798F15E87FF98014B = {
+			isa = PBXGroup;
+			children = (
+				0BDAB6E3AE66717795C8EF46 /* PodStudio */,
+				35983C57ECEDA7C4CB24DDE2 /* Config */,
+				4256CC4503DA23BF58050865 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		35983C57ECEDA7C4CB24DDE2 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				90B9761DCFC5FE5B8FBA212F /* PodStudio.xcconfig */,
+				DD0FE4DED56A70F767BA3FCE /* Info.plist */,
+				1946ABF13591D830335B31A3 /* PodStudio-iOS.entitlements */,
+				5C41A0A77E42DA0E02DD0F98 /* PodStudio-macOS.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		4256CC4503DA23BF58050865 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0AEFE66E0261EC01A880E60F /* PodStudio.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3A3D28227682B2CE9367773D /* PodStudio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C5757A4EBCA12EC77DECB38 /* Build configuration list for PBXNativeTarget "PodStudio" */;
+			buildPhases = (
+				5803B45EFA3C1EB6A9DFD8E7 /* Sources */,
+				8EC129A5AAA51F83325576CD /* Frameworks */,
+				DF052A42D5C7E938D41E3742 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0BDAB6E3AE66717795C8EF46 /* PodStudio */,
+			);
+			name = PodStudio;
+			packageProductDependencies = (
+				76A83A60768CF2762B15F953 /* StudioCore */,
+				FA91A0B10CF8A1162D4B0E00 /* StudioServices */,
+				3312898796FFCE0D08005A31 /* LAMEKit */,
+			);
+			productName = PodStudio;
+			productReference = 0AEFE66E0261EC01A880E60F /* PodStudio.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		74B82FC42040BC7AEDCB568A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					3A3D28227682B2CE9367773D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = 08846E6979100CA65306BD6A /* Build configuration list for PBXProject "PodStudio" */;
+			developmentRegion = de;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				de,
+				en,
+				Base,
+			);
+			mainGroup = 42EB01B798F15E87FF98014B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5ADD20759202BA67B9E81708 /* XCLocalSwiftPackageReference "Packages/PodStudioKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4256CC4503DA23BF58050865 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3A3D28227682B2CE9367773D /* PodStudio */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DF052A42D5C7E938D41E3742 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5803B45EFA3C1EB6A9DFD8E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5B0DA78C2D64DAA15A4D13A2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8ADEAEBC7BFBC5C601E02B70 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		91684BB7147FEEEF27462542 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 90B9761DCFC5FE5B8FBA212F /* PodStudio.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "Config/PodStudio-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Config/PodStudio-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Config/PodStudio-macOS.entitlements";
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphone*]" = UIStatusBarStyleDefault;
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PodStudio;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCameraUsageDescription = "PodStudio zeigt dein Kamerabild in der Studio-Ansicht.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "PodStudio nimmt deine Stimme lokal in Studioqualität auf.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PODSTUDIO_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		17C793EACE402C4E317F1F27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 90B9761DCFC5FE5B8FBA212F /* PodStudio.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "Config/PodStudio-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Config/PodStudio-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Config/PodStudio-macOS.entitlements";
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphone*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphone*]" = UIStatusBarStyleDefault;
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PodStudio;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCameraUsageDescription = "PodStudio zeigt dein Kamerabild in der Studio-Ansicht.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "PodStudio nimmt deine Stimme lokal in Studioqualität auf.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PODSTUDIO_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		08846E6979100CA65306BD6A /* Build configuration list for PBXProject "PodStudio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5B0DA78C2D64DAA15A4D13A2 /* Debug */,
+				8ADEAEBC7BFBC5C601E02B70 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3C5757A4EBCA12EC77DECB38 /* Build configuration list for PBXNativeTarget "PodStudio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				91684BB7147FEEEF27462542 /* Debug */,
+				17C793EACE402C4E317F1F27 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		5ADD20759202BA67B9E81708 /* XCLocalSwiftPackageReference "Packages/PodStudioKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/PodStudioKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		76A83A60768CF2762B15F953 /* StudioCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ADD20759202BA67B9E81708 /* XCLocalSwiftPackageReference "Packages/PodStudioKit" */;
+			productName = StudioCore;
+		};
+		FA91A0B10CF8A1162D4B0E00 /* StudioServices */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ADD20759202BA67B9E81708 /* XCLocalSwiftPackageReference "Packages/PodStudioKit" */;
+			productName = StudioServices;
+		};
+		3312898796FFCE0D08005A31 /* LAMEKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ADD20759202BA67B9E81708 /* XCLocalSwiftPackageReference "Packages/PodStudioKit" */;
+			productName = LAMEKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 74B82FC42040BC7AEDCB568A /* Project object */;
+}
