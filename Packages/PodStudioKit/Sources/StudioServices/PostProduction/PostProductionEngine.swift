@@ -114,7 +114,8 @@ public enum PostProductionEngine {
         let outputs: [(String?, [Float], NormalizationReport)] =
             result.speakers.map { ($0.name, $0.samples, $0.report) } + [(nil, result.mix, result.mixReport)]
         for (i, (speaker, samples, report)) in outputs.enumerated() {
-            let stem = speaker.map { "\(baseName) - \(sanitize($0))" } ?? "\(baseName) - Mix"
+            let base = sanitize(baseName)
+            let stem = speaker.map { "\(base) - \(sanitize($0))" } ?? "\(base) - Mix"
             progress("Exportiere \(speaker ?? "Mix")", 0.6 + 0.4 * Double(i) / Double(outputs.count))
             let url = outputDirectory.appendingPathComponent("\(stem).mp3")
             try MP3Encoder.encodeFile(channels: [samples], to: url, settings: mp3,
@@ -316,7 +317,7 @@ public enum PostProductionEngine {
         }
     }
 
-    static func sanitize(_ name: String) -> String {
+    public static func sanitize(_ name: String) -> String {
         let bad = CharacterSet(charactersIn: "/\\:?%*|\"<>")
         return name.components(separatedBy: bad).joined(separator: "_")
     }

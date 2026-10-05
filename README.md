@@ -57,7 +57,7 @@ LAME-MP3) läuft auch unter Linux:
 
 ```sh
 cd Packages/PodStudioKit
-swift test                                  # 50 XCTest-Fälle
+swift test                                  # 52 XCTest-Fälle
 swift run -c release pstool synth --out /tmp/ps --seconds 60
 swift run -c release pstool render --out /tmp/ps/out /tmp/ps/speaker*.wav
 ffmpeg -i /tmp/ps/out/mix.mp3 -af ebur128 -f null -   # unabhängige LUFS-Messung

@@ -46,6 +46,7 @@ Prüfstand: `swift run -c release pstool synth …` + `pstool render …` (siehe
 - [x] Import (beliebige Core-Audio-Formate → 48 kHz mono), Alignment über REC-Fenster + Segmente 🧪
 - [x] Offline-Rendering (AVAudioEngine manual rendering: HPF 80 Hz, EQ, Dynamics)
 - [x] Loudness -16 LUFS je Sprecher + Summe, Limiter 🧪
+- [x] Marker als Audacity-Labels + Kapitelliste (Pausen herausgerechnet) 🧪
 
 | Kriterium | Stand |
 |---|---|

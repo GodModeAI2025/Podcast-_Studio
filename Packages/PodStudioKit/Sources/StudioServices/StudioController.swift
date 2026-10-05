@@ -571,6 +571,14 @@ public final class StudioController {
                 }
             }.value
             exportedFiles = files
+            if !session.markers.isEmpty {
+                let base = PostProductionEngine.sanitize(session.title)
+                let labels = out.appendingPathComponent("\(base) - Marker (Audacity).txt")
+                let chapters = out.appendingPathComponent("\(base) - Kapitel.txt")
+                try MarkerExport.audacityLabels(session.markers, windows: windows).write(to: labels, atomically: true, encoding: .utf8)
+                try MarkerExport.chapterList(session.markers, windows: windows).write(to: chapters, atomically: true, encoding: .utf8)
+                exportedFiles += [labels, chapters].map { ExportedFile(url: $0, speaker: nil, loudnessLUFS: .nan, peakDB: .nan) }
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -594,7 +602,7 @@ public final class StudioController {
     private func existingExports(for manifest: SessionManifest) -> [ExportedFile] {
         let dir = store.exportsDirectory(for: manifest.id)
         let urls = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
-        return urls.filter { ["mp3", "m4a", "wav"].contains($0.pathExtension) }
+        return urls.filter { ["mp3", "m4a", "wav", "txt"].contains($0.pathExtension) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .map { ExportedFile(url: $0, speaker: nil, loudnessLUFS: .nan, peakDB: .nan) }
     }
