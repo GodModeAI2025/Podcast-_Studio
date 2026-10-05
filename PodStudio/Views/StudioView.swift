@@ -9,16 +9,17 @@ struct StudioView: View {
     @Environment(StudioController.self) private var studio
     var onBack: () -> Void = {}
     #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    private var isCompact: Bool { sizeClass == .compact }
+    /// iPhones always use the one-screen-at-a-time layout, also in landscape.
+    private var isCompact: Bool { UIDevice.current.userInterfaceIdiom == .phone }
     #else
     private var isCompact: Bool { false }
     #endif
     @State private var camera = CameraController()
-    @State private var panel: Panel = .script
+    @State private var panel: Panel = .start
     @State private var stepsDismissed = false
 
     enum Panel: String, CaseIterable, Identifiable {
+        case start = "Start"
         case script = "Drehbuch"
         case mic = "Mikro"
         case status = "Session"
@@ -56,25 +57,27 @@ struct StudioView: View {
         }
     }
 
+    private var showStart: Bool { NextStepsPanel.shouldShow(studio, dismissed: stepsDismissed) }
+
     private var compactLayout: some View {
-        VStack(spacing: 0) {
-            NextStepsPanel(dismissed: $stepsDismissed)
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
-            HStack(spacing: 8) {
-                ForEach(Panel.allCases) { p in
-                    Button(p.rawValue) { panel = p }
-                        .buttonStyle(.arcade(panel == p ? .primary : .ghost, compact: true))
-                        .frame(maxWidth: .infinity)
+        let current: Panel = (panel == .start && !showStart) ? .script : panel
+        return VStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Panel.allCases.filter { $0 != .start || showStart }) { p in
+                        Button(p.rawValue) { panel = p }
+                            .buttonStyle(.arcade(current == p ? .primary : .ghost, compact: true))
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
             Group {
-                switch panel {
+                switch current {
+                case .start: ScrollView { NextStepsPanel(dismissed: $stepsDismissed).padding(16) }
                 case .script: ScriptPanel()
-                case .mic: ScrollView { VStack(spacing: 20) { SelfView(camera: camera); MicPanel() }.padding(16) }
-                case .status: ScrollView { SessionStatusPanel().padding(16) }
+                case .mic: ScrollView { MicPanel().padding(16) }
+                case .status: ScrollView { VStack(spacing: 20) { SessionStatusPanel(); SelfView(camera: camera) }.padding(16) }
                 case .delivery: ScrollView { DeliveryPanel().padding(16) }
                 }
             }

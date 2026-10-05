@@ -12,6 +12,64 @@ struct RootView: View {
 
     var body: some View {
         @Bindable var studio = studio
+        content(studio: studio)
+            .alert("Neue Session", isPresented: $showNewSession) {
+                TextField("Titel der Folge", text: $newTitle)
+                Button("Anlegen") {
+                    studio.createSession(title: newTitle.isEmpty ? "Neue Folge" : newTitle)
+                    newTitle = ""
+                }
+                Button("Abbrechen", role: .cancel) {}
+            }
+            .alert("Fehler", isPresented: Binding(get: { studio.errorMessage != nil },
+                                                   set: { if !$0 { studio.errorMessage = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(studio.errorMessage ?? "")
+            }
+            .alert("Aufnahme wiederhergestellt", isPresented: $showRecovery) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                let seconds = studio.recoveryResults.reduce(Int64(0)) { $0 + $1.recoveredFrames } / 48_000
+                Text("PodStudio wurde während einer Aufnahme beendet. \(studio.recoveryResults.count) Aufnahme(n) mit insgesamt \(seconds) s wurden gerettet und können hochgeladen bzw. gemischt werden.")
+            }
+            .onChange(of: studio.recoveryResults) { _, results in
+                showRecovery = !results.isEmpty
+            }
+    }
+
+    private var isPhone: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }
+
+    @ViewBuilder private func content(studio: StudioController) -> some View {
+        if isPhone {
+            phoneBody(studio: studio)
+        } else {
+            splitBody(studio: studio)
+        }
+    }
+
+    /// iPhone: session list → pushed studio screen (works in portrait and landscape).
+    private func phoneBody(studio: StudioController) -> some View {
+        NavigationStack {
+            SessionListView(showNewSession: $showNewSession)
+                .navigationDestination(isPresented: Binding(
+                    get: { studio.current != nil },
+                    set: { if !$0 { studio.close() } })) {
+                    ZStack {
+                        ArcadeBackground()
+                        StudioView(onBack: { studio.close() })
+                    }
+                }
+        }
+    }
+
+    private func splitBody(studio: StudioController) -> some View {
         NavigationSplitView(preferredCompactColumn: $column) {
             SessionListView(showNewSession: $showNewSession)
                 #if os(macOS)
@@ -27,32 +85,9 @@ struct RootView: View {
                 }
             }
         }
-        .alert("Neue Session", isPresented: $showNewSession) {
-            TextField("Titel der Folge", text: $newTitle)
-            Button("Anlegen") {
-                studio.createSession(title: newTitle.isEmpty ? "Neue Folge" : newTitle)
-                newTitle = ""
-            }
-            Button("Abbrechen", role: .cancel) {}
-        }
-        .alert("Fehler", isPresented: Binding(get: { studio.errorMessage != nil },
-                                               set: { if !$0 { studio.errorMessage = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(studio.errorMessage ?? "")
-        }
-        .alert("Aufnahme wiederhergestellt", isPresented: $showRecovery) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            let seconds = studio.recoveryResults.reduce(Int64(0)) { $0 + $1.recoveredFrames } / 48_000
-            Text("PodStudio wurde während einer Aufnahme beendet. \(studio.recoveryResults.count) Aufnahme(n) mit insgesamt \(seconds) s wurden gerettet und können hochgeladen bzw. gemischt werden.")
-        }
         .onChange(of: studio.current?.id) { _, id in
             // iPhone: jump from the list to the opened session.
             if id != nil { column = .detail }
-        }
-        .onChange(of: studio.recoveryResults) { _, results in
-            showRecovery = !results.isEmpty
         }
     }
 }

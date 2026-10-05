@@ -8,12 +8,14 @@ struct NextStepsPanel: View {
     @Environment(StudioController.self) private var studio
     @Binding var dismissed: Bool
 
-    private var visible: Bool {
+    static func shouldShow(_ studio: StudioController, dismissed: Bool) -> Bool {
         !dismissed
             && studio.transport.phase == .idle
             && studio.current?.state == .idle
             && studio.exportedFiles.isEmpty
     }
+
+    private var visible: Bool { Self.shouldShow(studio, dismissed: dismissed) }
 
     var body: some View {
         if visible {

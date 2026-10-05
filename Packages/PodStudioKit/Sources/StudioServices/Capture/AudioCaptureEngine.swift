@@ -50,6 +50,12 @@ public final class AudioCaptureEngine {
     public private(set) var microphoneModeName = ""
 
     /// Echo cancellation + system mic modes. Required when participants use speakers.
+    /// Digital input gain in dB (0...+30). Raises quiet microphones (voice processing on
+    /// iPhone often delivers around -45 dBFS RMS) for both the meter and the recording.
+    public var inputGainDB: Double = 0 {
+        didSet { recorder.setInputGain(dB: inputGainDB) }
+    }
+
     public var voiceProcessingEnabled = true {
         didSet { if oldValue != voiceProcessingEnabled { restartIfRunning() } }
     }
@@ -370,6 +376,14 @@ public final class TrackRecorder: @unchecked Sendable {
         }
     }
 
+    private var gainLinear: Float = 1
+
+    /// Digital input gain in dB (0...+30), applied before metering and writing.
+    public func setInputGain(dB: Double) {
+        let linear = Float(pow(10, max(0, min(30, dB)) / 20))
+        lock.withLock { gainLinear = linear }
+    }
+
     /// Audio thread.
     func handle(buffer: AVAudioPCMBuffer, time: AVAudioTime) {
         let bufferStart = time.isHostTimeValid
@@ -377,7 +391,11 @@ public final class TrackRecorder: @unchecked Sendable {
             : HostClock.now() - Double(buffer.frameLength) / buffer.format.sampleRate
         guard let mono = convert(buffer), let data = mono.floatChannelData?[0] else { return }
         let n = Int(mono.frameLength)
-        let samples = Array(UnsafeBufferPointer(start: data, count: n))
+        var samples = Array(UnsafeBufferPointer(start: data, count: n))
+        let gain = lock.withLock { gainLinear }
+        if gain != 1 {
+            for i in samples.indices { samples[i] = max(-1, min(1, samples[i] * gain)) }
+        }
         onLevels?(samples, Double(n) / 48_000)
 
         let (output, w) = lock.withLock {

@@ -40,26 +40,48 @@ struct MicPanel: View {
                 .foregroundStyle(Arcade.muted)
             }
 
-            Toggle("Sprachverarbeitung (Echo-Unterdrückung)", isOn: Bindable(capture).voiceProcessingEnabled)
-                .toggleStyle(.arcade)
-                .disabled(studio.isRecordingActive)
-            #if os(iOS)
-            Toggle("AirPods in Studioqualität", isOn: Bindable(capture).bluetoothHighQualityRecording)
-                .toggleStyle(.arcade)
-                .disabled(studio.isRecordingActive)
-            #endif
-
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Eyebrow("Mikrofonmodus", color: Arcade.muted)
-                    Text(capture.microphoneModeName.isEmpty ? "–" : capture.microphoneModeName)
-                        .font(Arcade.chrome(14, weight: .heavy)).foregroundStyle(Arcade.accent)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Eingangspegel anheben").font(Arcade.read(.body)).foregroundStyle(Arcade.ink)
+                    Spacer()
+                    Text(capture.inputGainDB < 0.5 ? "aus" : "+\(Int(capture.inputGainDB)) dB")
+                        .font(Arcade.chrome(17, weight: .bold)).foregroundStyle(Arcade.accent).monospacedDigit()
                 }
-                Spacer()
-                Button("Ändern") { capture.showMicrophoneModes() }
-                    .buttonStyle(.arcade(.ghost, compact: true))
-                    .disabled(!capture.voiceProcessingEnabled)
+                Slider(value: Bindable(capture).inputGainDB, in: 0...30, step: 1) { Text("Eingangspegel") }
+                    .tint(Arcade.accent)
+                    .disabled(studio.isRecordingActive)
+                Text("Schlägt die Anzeige beim Sprechen kaum aus, heb den Pegel hier an. Gut sind Spitzen bei etwa -12 dB. Der Wert wirkt auf Anzeige und Aufnahme.")
+                    .font(Arcade.read(.footnote)).foregroundStyle(Arcade.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: 14) {
+                    Toggle("Sprachverarbeitung (Echo-Unterdrückung)", isOn: Bindable(capture).voiceProcessingEnabled)
+                        .toggleStyle(.arcade)
+                        .disabled(studio.isRecordingActive)
+                    #if os(iOS)
+                    Toggle("AirPods in Studioqualität", isOn: Bindable(capture).bluetoothHighQualityRecording)
+                        .toggleStyle(.arcade)
+                        .disabled(studio.isRecordingActive)
+                    #endif
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Eyebrow("Mikrofonmodus", color: Arcade.muted)
+                            Text(capture.microphoneModeName.isEmpty ? "–" : capture.microphoneModeName)
+                                .font(Arcade.chrome(15, weight: .bold)).foregroundStyle(Arcade.accent)
+                        }
+                        Spacer()
+                        Button("Ändern") { capture.showMicrophoneModes() }
+                            .buttonStyle(.arcade(.ghost, compact: true))
+                            .disabled(!capture.voiceProcessingEnabled)
+                    }
+                }
+                .padding(.top, 10)
+            } label: {
+                Text("Erweitert").font(Arcade.chrome(16, weight: .semibold)).foregroundStyle(Arcade.ink)
+            }
+            .tint(Arcade.accent)
             if let error = capture.lastError {
                 Text(error).font(Arcade.read(.caption)).foregroundStyle(Arcade.warn)
             }

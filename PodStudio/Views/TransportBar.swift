@@ -12,28 +12,33 @@ struct TransportBar: View {
     var body: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Arcade.hairline).frame(height: 1)
-            HStack(spacing: 18) {
+            HStack(spacing: isPhone ? 12 : 18) {
                 TimelineView(.periodic(from: .now, by: 0.1)) { _ in
                     HStack(spacing: 12) {
                         RecLamp(active: studio.transport.phase == .recording)
                         Text(format(studio.elapsed))
-                            .font(Arcade.chrome(34, weight: .heavy, relativeTo: .title))
+                            .font(Arcade.chrome(30, weight: .heavy, relativeTo: .title))
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
                                                 }
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
-                    Text("Audio · 48 kHz · 24 Bit")
-                        .font(Arcade.chrome(12))
-                        .foregroundStyle(Arcade.muted)
+                if !isPhone {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
+                        Text("48 kHz · 24 Bit")
+                            .font(Arcade.chrome(12))
+                            .foregroundStyle(Arcade.muted)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer(minLength: 8)
                 buttons
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 14)
+            .padding(.horizontal, isPhone ? 16 : 22)
+            .padding(.vertical, 12)
             .background(Arcade.bar)
         }
         .alert("Marker setzen", isPresented: $showMarker) {
@@ -47,7 +52,7 @@ struct TransportBar: View {
     }
 
     @ViewBuilder private var buttons: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             switch studio.transport.phase {
             case .idle:
                 Button("● Rec") { studio.issue(.start) }
@@ -77,6 +82,14 @@ struct TransportBar: View {
                     .foregroundStyle(Arcade.ok)
             }
         }
+    }
+
+    private var isPhone: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
 
     private var phaseLabel: String {
