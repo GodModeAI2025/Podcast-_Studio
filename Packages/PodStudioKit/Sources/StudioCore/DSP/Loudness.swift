@@ -122,6 +122,7 @@ public struct LevelMeter: Sendable, Equatable {
     public private(set) var peakHoldDB: Double = -160
     public private(set) var clipped = false
     private var holdRemaining: TimeInterval = 0
+    private var clipRemaining: TimeInterval = 0
 
     public var holdTime: TimeInterval = 1.5
     public var decayDBPerSecond: Double = 20
@@ -148,7 +149,13 @@ public struct LevelMeter: Sendable, Equatable {
             holdRemaining -= duration
             if holdRemaining <= 0 { peakHoldDB = max(p, peakHoldDB - decayDBPerSecond * duration) }
         }
-        if p >= clipThresholdDB { clipped = true }
+        if p >= clipThresholdDB {
+            clipped = true
+            clipRemaining = 2
+        } else if clipped {
+            clipRemaining -= duration
+            if clipRemaining <= 0 { clipped = false }
+        }
     }
 
     public mutating func process(_ samples: [Float], duration: TimeInterval) {

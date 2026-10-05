@@ -17,6 +17,7 @@ struct StudioView: View {
     @State private var camera = CameraController()
     @State private var panel: Panel = .start
     @State private var stepsDismissed = false
+    @State private var showSettings = false
 
     enum Panel: String, CaseIterable, Identifiable {
         case start = "Start"
@@ -29,7 +30,7 @@ struct StudioView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StudioTopBar(onBack: isCompact ? onBack : nil)
+            StudioTopBar(onBack: isCompact ? onBack : nil, onSettings: { showSettings = true })
             if isCompact { compactLayout } else { regularLayout }
             TransportBar()
         }
@@ -37,6 +38,19 @@ struct StudioView: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .onDisappear { camera.stop() }
+        #if os(iOS)
+        .sheet(isPresented: $showSettings) {
+            NavigationStack {
+                SettingsView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) { Button("Fertig") { showSettings = false } }
+                    }
+            }
+            .environment(studio)
+            .preferredColorScheme(.dark)
+            .tint(Arcade.accent)
+        }
+        #endif
     }
 
     private var regularLayout: some View {
@@ -90,6 +104,7 @@ struct StudioView: View {
 struct StudioTopBar: View {
     @Environment(StudioController.self) private var studio
     var onBack: (() -> Void)?
+    var onSettings: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -131,6 +146,13 @@ struct StudioTopBar: View {
             }
             Spacer(minLength: 8)
             liveBadge
+            #if os(iOS)
+            if let onSettings {
+                Button { onSettings() } label: { Image(systemName: "gearshape") }
+                    .buttonStyle(.arcade(.ghost, compact: true))
+                    .accessibilityLabel("Einstellungen")
+            }
+            #endif
         }
     }
 

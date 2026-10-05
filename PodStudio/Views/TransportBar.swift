@@ -12,33 +12,36 @@ struct TransportBar: View {
     var body: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Arcade.hairline).frame(height: 1)
-            HStack(spacing: isPhone ? 12 : 18) {
-                TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                    HStack(spacing: 12) {
-                        RecLamp(active: studio.transport.phase == .recording)
-                        Text(format(studio.elapsed))
-                            .font(Arcade.chrome(30, weight: .heavy, relativeTo: .title))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .fixedSize()
-                            .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
-                                                }
+            VStack(alignment: .leading, spacing: 12) {
+                if let reason = studio.startBlockReason {
+                    Text(reason)
+                        .font(Arcade.read(.footnote))
+                        .foregroundStyle(Arcade.warn)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                if !isPhone {
-                    VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 18) {
+                    timer
+                    if isPhone {
+                        Spacer(minLength: 4)
                         Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
-                        Text("48 kHz · 24 Bit")
-                            .font(Arcade.chrome(12))
-                            .foregroundStyle(Arcade.muted)
-                            .lineLimit(1)
+                    } else {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
+                            Text("48 kHz · 24 Bit")
+                                .font(Arcade.chrome(12))
+                                .foregroundStyle(Arcade.muted)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 8)
+                        buttons
                     }
                 }
-
-                Spacer(minLength: 8)
-                buttons
+                // iPhone: the controls get their own full-width row, so labels never truncate.
+                if isPhone { buttons }
             }
             .padding(.horizontal, isPhone ? 16 : 22)
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Arcade.bar)
         }
         .alert("Marker setzen", isPresented: $showMarker) {
@@ -51,37 +54,59 @@ struct TransportBar: View {
         }
     }
 
+    private var timer: some View {
+        TimelineView(.periodic(from: .now, by: 0.1)) { _ in
+            HStack(spacing: 12) {
+                RecLamp(active: studio.transport.phase == .recording)
+                Text(format(studio.elapsed))
+                    .font(Arcade.chrome(30, weight: .heavy, relativeTo: .title))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize()
+                    .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
+            }
+        }
+    }
+
     @ViewBuilder private var buttons: some View {
         HStack(spacing: 10) {
             switch studio.transport.phase {
             case .idle:
                 Button("● Rec") { studio.issue(.start) }
                     .buttonStyle(.arcadeRec)
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                     .disabled(!studio.canIssue(.start))
                     .keyboardShortcut("r", modifiers: .command)
                     .help(studio.canIssue(.start) ? "Aufnahme auf allen Geräten starten" : "Warte auf Uhren-Sync bzw. Session ist bereits aufgenommen")
             case .recording:
                 Button("Marker") { showMarker = true }
                     .buttonStyle(.arcadeGhost)
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                     .keyboardShortcut("m", modifiers: .command)
                 Button("Pause") { studio.issue(.pause) }
                     .buttonStyle(.arcade)
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                 Button("■ Stopp") { studio.issue(.stop) }
                     .buttonStyle(.arcade(.danger))
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                     .keyboardShortcut(".", modifiers: .command)
             case .paused:
                 Button("Marker") { showMarker = true }
                     .buttonStyle(.arcadeGhost)
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                 Button("● Weiter") { studio.issue(.resume) }
                     .buttonStyle(.arcadeRec)
+                    .frame(maxWidth: isPhone ? .infinity : nil)
                 Button("■ Stopp") { studio.issue(.stop) }
                     .buttonStyle(.arcade(.danger))
+                    .frame(maxWidth: isPhone ? .infinity : nil)
             case .stopped:
                 Text("Aufnahme beendet")
                     .font(Arcade.chrome(13, weight: .heavy))
                     .foregroundStyle(Arcade.ok)
             }
         }
+        .frame(maxWidth: isPhone ? .infinity : nil)
     }
 
     private var isPhone: Bool {

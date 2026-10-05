@@ -4,29 +4,19 @@ import SwiftUI
 
 struct MicPanel: View {
     @Environment(StudioController.self) private var studio
+    #if os(iOS)
+    @State private var picker = InputPickerHost()
+    #endif
 
     var body: some View {
         let capture = studio.capture
         ArcadeSection(title: "Mikrofon") {
-            Menu {
-                ForEach(capture.inputs) { input in
-                    Button(input.name) { capture.selectInput(input.id) }
-                }
-            } label: {
-                HStack {
-                    Text(capture.inputs.first(where: { $0.id == capture.selectedInputID })?.name ?? "Eingang wählen")
-                        .font(Arcade.chrome(16, weight: .bold))
-                        .foregroundStyle(Arcade.ink)
-                        .lineLimit(1)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down").font(.footnote.weight(.semibold)).foregroundStyle(Arcade.accent)
-                }
-                .arcadeField()
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .disabled(studio.isRecordingActive)
+            inputSelector(capture)
 
+            if !capture.isRunning {
+                Text("Das Mikrofon ist gerade aus. Tippe unten auf „Mikrofon starten“.")
+                    .font(Arcade.read(.footnote)).foregroundStyle(Arcade.warn)
+            }
             VStack(alignment: .leading, spacing: 6) {
                 SegmentMeter(meter: capture.meter, segments: 24)
                     .frame(height: 24)
@@ -92,7 +82,53 @@ struct MicPanel: View {
                 .buttonStyle(.arcade)
             }
         }
-        .onAppear { capture.refreshInputs() }
+        .onAppear {
+            capture.ensureRunning()
+            capture.refreshInputs()
+        }
+    }
+
+    @ViewBuilder private func inputSelector(_ capture: AudioCaptureEngine) -> some View {
+        #if os(iOS)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Eyebrow("Aktives Mikrofon")
+                Text(capture.activeInputName)
+                    .font(Arcade.chrome(17, weight: .bold))
+                    .foregroundStyle(Arcade.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+            }
+            Spacer(minLength: 8)
+            Button("Wechseln") { picker.present() }
+                .buttonStyle(.arcade(.primary, compact: true))
+                .disabled(studio.isRecordingActive)
+        }
+        .arcadeField()
+        .background(InputPickerAnchor(host: picker))
+        .onAppear {
+            picker.onDismiss = { capture.refreshInputs() }
+        }
+        #else
+        Menu {
+            ForEach(capture.inputs) { input in
+                Button(input.name) { capture.selectInput(input.id) }
+            }
+        } label: {
+            HStack {
+                Text(capture.inputs.first(where: { $0.id == capture.selectedInputID })?.name ?? "Eingang wählen")
+                    .font(Arcade.chrome(16, weight: .bold))
+                    .foregroundStyle(Arcade.ink)
+                    .lineLimit(1)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down").font(.footnote.weight(.semibold)).foregroundStyle(Arcade.accent)
+            }
+            .arcadeField()
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .disabled(studio.isRecordingActive)
+        #endif
     }
 
     private func dB(_ v: Double) -> String { v > -100 ? String(format: "%.0f dB", v) : "-∞" }

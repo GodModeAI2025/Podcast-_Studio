@@ -47,17 +47,23 @@ struct RootView: View {
     }
 
     @ViewBuilder private func content(studio: StudioController) -> some View {
+        #if os(iOS)
         if isPhone {
             phoneBody(studio: studio)
         } else {
             splitBody(studio: studio)
         }
+        #else
+        splitBody(studio: studio)
+        #endif
     }
 
+    #if os(iOS)
     /// iPhone: session list → pushed studio screen (works in portrait and landscape).
     private func phoneBody(studio: StudioController) -> some View {
         NavigationStack {
             SessionListView(showNewSession: $showNewSession)
+                .containerBackground(Arcade.bg, for: .navigation)
                 .navigationDestination(isPresented: Binding(
                     get: { studio.current != nil },
                     set: { if !$0 { studio.close() } })) {
@@ -65,9 +71,12 @@ struct RootView: View {
                         ArcadeBackground()
                         StudioView(onBack: { studio.close() })
                     }
+                    .containerBackground(Arcade.bg, for: .navigation)
                 }
         }
     }
+
+    #endif
 
     private func splitBody(studio: StudioController) -> some View {
         NavigationSplitView(preferredCompactColumn: $column) {
@@ -177,15 +186,15 @@ struct SessionListView: View {
 
     private func row(_ session: SessionManifest) -> some View {
         let selected = studio.current?.id == session.id
-        return Button {
+        let rowButton = Button {
             studio.open(session)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 Text(session.isOwner ? "HOST" : "GAST")
-                    .font(Arcade.chrome(10, weight: .heavy))
+                    .font(Arcade.chrome(12, weight: .heavy))
                     .foregroundStyle(session.isOwner ? Arcade.accentInk : Arcade.ink)
-                    .padding(.horizontal, 5).padding(.vertical, 3)
-                    .background(session.isOwner ? Arcade.accent : Arcade.panelStrong)
+                    .padding(.horizontal, 9).padding(.vertical, 4)
+                    .background(Capsule().fill(session.isOwner ? Arcade.accent : Arcade.panelStrong))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(session.title)
                         .font(Arcade.read(.body).weight(.semibold))
@@ -196,7 +205,7 @@ struct SessionListView: View {
                         Text(session.createdAt, format: .dateTime.day().month().year())
                         Text(stateLabel(session.state))
                     }
-                    .font(Arcade.chrome(11))
+                    .font(Arcade.chrome(13))
                     .foregroundStyle(session.state == .recording ? Arcade.rec : Arcade.muted)
                 }
                 Spacer(minLength: 0)
@@ -208,6 +217,19 @@ struct SessionListView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        return HStack(spacing: 4) {
+            rowButton
+            Menu {
+                Button("Löschen", role: .destructive) { studio.delete(session) }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Arcade.muted)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Weitere Aktionen für \(session.title)")
+        }
         .contextMenu {
             Button("Löschen", role: .destructive) { studio.delete(session) }
         }
@@ -234,8 +256,6 @@ struct SettingsView: View {
             ArcadeBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    Text("Einstellungen").arcadeHeadline(26)
-
                     ArcadeSection(title: "Profil") {
                         TextField("Anzeigename", text: $name)
                             .textFieldStyle(.plain)
@@ -270,6 +290,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Einstellungen")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         .onAppear { name = studio.identity.displayName }
         .onDisappear { if !name.isEmpty { studio.rename(name) } }
     }

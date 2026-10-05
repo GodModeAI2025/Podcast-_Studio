@@ -61,7 +61,9 @@ public final class AudioCaptureEngine {
     }
 
     /// iOS 26: high-quality (non-HFP) recording through AirPods.
-    public var bluetoothHighQualityRecording = true {
+    /// Off by default: the high-quality AirPods codec is not compatible with voice
+    /// processing and made the input selection unreliable.
+    public var bluetoothHighQualityRecording = false {
         didSet { if oldValue != bluetoothHighQualityRecording { restartIfRunning() } }
     }
 
@@ -109,10 +111,25 @@ public final class AudioCaptureEngine {
         #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         if let port = session.availableInputs?.first(where: { $0.uid == id }) {
-            try? session.setPreferredInput(port)
+            do { try session.setPreferredInput(port) } catch { lastError = error.localizedDescription }
         }
         #endif
-        restartIfRunning()
+        // The route changes asynchronously; restart the engine once it has settled.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            self?.refreshInputs()
+            self?.restartIfRunning()
+        }
+    }
+
+    /// Name of the input that is actually in use right now.
+    public var activeInputName: String {
+        #if os(iOS)
+        AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName
+            ?? inputs.first(where: { $0.id == selectedInputID })?.name ?? "Kein Eingang"
+        #else
+        inputs.first(where: { $0.id == selectedInputID })?.name ?? "Kein Eingang"
+        #endif
     }
 
     /// Opens the system microphone-mode picker (Voice Isolation / Wide Spectrum).
@@ -168,6 +185,15 @@ public final class AudioCaptureEngine {
         #if os(iOS)
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         #endif
+    }
+
+    /// Brings the microphone back if the engine stopped without us noticing
+    /// (route change, other engines starting, media services reset).
+    public func ensureRunning() {
+        guard !recorder.isRecording else { return }
+        if isRunning, engine.isRunning { return }
+        isRunning = false
+        do { try start() } catch { lastError = error.localizedDescription }
     }
 
     private func restartIfRunning() {

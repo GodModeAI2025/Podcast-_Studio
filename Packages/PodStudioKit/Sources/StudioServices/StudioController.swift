@@ -194,6 +194,7 @@ public final class StudioController {
     private func save() {
         guard let current else { return }
         do { try store.save(current) } catch { errorMessage = error.localizedDescription }
+        if let i = sessions.firstIndex(where: { $0.id == current.id }) { sessions[i] = current }
     }
 
     private func mutate(_ change: (inout SessionManifest) -> Void) {
@@ -386,6 +387,19 @@ public final class StudioController {
         return current != nil
     }
 
+    /// Why REC is not available right now (nil = it is).
+    public var startBlockReason: String? {
+        guard transport.phase == .idle || transport.phase == .stopped else { return nil }
+        if current == nil { return "Keine Session geöffnet." }
+        if current?.state == .finished || current?.state == .recovered || transport.phase == .stopped {
+            return "Diese Folge ist schon aufgenommen. Lege eine neue Session an, um erneut aufzunehmen."
+        }
+        if !isOwner, isInSharePlay, !clock.isSynchronized {
+            return "Warte auf die Uhren-Synchronisation mit dem Host …"
+        }
+        return nil
+    }
+
     /// UI action from any participant.
     public func issue(_ action: RecordAction) {
         guard canIssue(action) else { return }
@@ -481,6 +495,7 @@ public final class StudioController {
             $0.state = .finished
             $0.windows = transport.windows
         }
+        capture.ensureRunning()
         if isOwner {
             mutate { m in
                 m.receivedTracks.removeAll { $0.participantID == finished.participantID }
@@ -583,6 +598,7 @@ public final class StudioController {
             errorMessage = error.localizedDescription
         }
         exportProgress = nil
+        capture.ensureRunning()
     }
 
     /// Frees the owner's iCloud quota. Local recordings and exports stay.

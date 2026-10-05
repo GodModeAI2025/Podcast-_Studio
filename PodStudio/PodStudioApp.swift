@@ -25,7 +25,10 @@ struct PodStudioApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     // Catch up on deliveries that arrived while the app was not running
                     // (silent pushes do not relaunch a force-quit app).
-                    if phase == .active { Task { await studio.refreshDelivery() } }
+                    if phase == .active {
+                        studio.capture.ensureRunning()
+                        Task { await studio.refreshDelivery() }
+                    }
                 }
         }
         #if os(macOS)
