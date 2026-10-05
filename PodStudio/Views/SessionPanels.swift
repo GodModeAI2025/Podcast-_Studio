@@ -119,6 +119,8 @@ struct DeliveryPanel: View {
         }
         ArcadeProgress(value: status.overallProgress)
 
+        LoudnessSlider()
+
         if let progress = studio.exportProgress {
             VStack(alignment: .leading, spacing: 6) {
                 Eyebrow(progress.step, color: Arcade.accent)

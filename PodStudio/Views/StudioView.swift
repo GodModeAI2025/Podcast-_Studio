@@ -7,6 +7,7 @@ import SwiftUI
 /// panels on one side, the script on the other, transport (REC) at the bottom.
 struct StudioView: View {
     @Environment(StudioController.self) private var studio
+    var onBack: () -> Void = {}
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isCompact: Bool { sizeClass == .compact }
@@ -27,7 +28,7 @@ struct StudioView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StudioTopBar()
+            StudioTopBar(onBack: isCompact ? onBack : nil)
             if isCompact { compactLayout } else { regularLayout }
             TransportBar()
         }
@@ -85,6 +86,7 @@ struct StudioView: View {
 /// `.lp-top`: sticky bar with mark, session title and the call to action (invite).
 struct StudioTopBar: View {
     @Environment(StudioController.self) private var studio
+    var onBack: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -96,32 +98,54 @@ struct StudioTopBar: View {
         }
     }
 
-    private var content: some View {
-        HStack(spacing: 16) {
+    @ViewBuilder private var content: some View {
+        if onBack != nil {
+            VStack(alignment: .leading, spacing: 12) {
+                titleRow
+                HStack(spacing: 10) { actions }
+            }
+        } else {
+            HStack(spacing: 16) {
+                titleRow
+                actions
+            }
+        }
+    }
+
+    private var titleRow: some View {
+        HStack(spacing: 14) {
+            if let onBack {
+                Button { onBack() } label: { Image(systemName: "chevron.left") }
+                    .buttonStyle(.arcade(.ghost, compact: true))
+                    .accessibilityLabel("Zur Sessionliste")
+            }
             VStack(alignment: .leading, spacing: 3) {
-                Eyebrow(studio.isOwner ? "Host · Session" : "Gast · Session")
+                Eyebrow(studio.isOwner ? "Host" : "Gast")
                 Text(studio.current?.title ?? "")
-                    .font(Arcade.chrome(18, weight: .heavy, relativeTo: .headline))
+                    .font(Arcade.chrome(20, weight: .bold, relativeTo: .headline))
                     .foregroundStyle(Arcade.ink)
                     .lineLimit(1)
             }
-            Spacer()
+            Spacer(minLength: 8)
             liveBadge
-            if let session = studio.current, session.isOwner {
-                let activity = studio.activity(for: session)
-                if studio.sharePlay.isEligibleForGroupSession && !studio.isInSharePlay {
-                    Button("SharePlay") { Task { _ = await studio.sharePlay.activate(activity) } }
-                        .buttonStyle(.arcade(.ghost, compact: true))
-                }
-                ShareLink(item: activity, preview: SharePreview("PodStudio: \(session.title)")) {
-                    Text("Gäste einladen")
-                }
-                .buttonStyle(.arcade(.primary, compact: true))
-            }
-            if studio.isInSharePlay {
-                Button("Verlassen") { studio.sharePlay.leave() }
+        }
+    }
+
+    @ViewBuilder private var actions: some View {
+        if let session = studio.current, session.isOwner {
+            let activity = studio.activity(for: session)
+            if studio.sharePlay.isEligibleForGroupSession && !studio.isInSharePlay {
+                Button("SharePlay") { Task { _ = await studio.sharePlay.activate(activity) } }
                     .buttonStyle(.arcade(.ghost, compact: true))
             }
+            ShareLink(item: activity, preview: SharePreview("PodStudio: \(session.title)")) {
+                Text("Gäste einladen")
+            }
+            .buttonStyle(.arcade(.primary, compact: true))
+        }
+        if studio.isInSharePlay {
+            Button("Verlassen") { studio.sharePlay.leave() }
+                .buttonStyle(.arcade(.ghost, compact: true))
         }
     }
 

@@ -8,10 +8,11 @@ struct RootView: View {
     @State private var showNewSession = false
     @State private var newTitle = ""
     @State private var showRecovery = false
+    @State private var column: NavigationSplitViewColumn = .sidebar
 
     var body: some View {
         @Bindable var studio = studio
-        NavigationSplitView {
+        NavigationSplitView(preferredCompactColumn: $column) {
             SessionListView(showNewSession: $showNewSession)
                 #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 240, ideal: 280)
@@ -20,7 +21,7 @@ struct RootView: View {
             ZStack {
                 ArcadeBackground()
                 if studio.current != nil {
-                    StudioView()
+                    StudioView(onBack: { column = .sidebar })
                 } else {
                     WelcomeView(showNewSession: $showNewSession)
                 }
@@ -45,6 +46,10 @@ struct RootView: View {
         } message: {
             let seconds = studio.recoveryResults.reduce(Int64(0)) { $0 + $1.recoveredFrames } / 48_000
             Text("PodStudio wurde während einer Aufnahme beendet. \(studio.recoveryResults.count) Aufnahme(n) mit insgesamt \(seconds) s wurden gerettet und können hochgeladen bzw. gemischt werden.")
+        }
+        .onChange(of: studio.current?.id) { _, id in
+            // iPhone: jump from the list to the opened session.
+            if id != nil { column = .detail }
         }
         .onChange(of: studio.recoveryResults) { _, results in
             showRecovery = !results.isEmpty
@@ -214,12 +219,7 @@ struct SettingsView: View {
                                   selection: $studio.exportOptions.mp3.channelMode)
                         Toggle("Zusätzlich AAC (M4A)", isOn: $studio.exportOptions.alsoAAC).toggleStyle(.arcade)
                         Toggle("Zusätzlich WAV (24 Bit)", isOn: $studio.exportOptions.alsoWAV).toggleStyle(.arcade)
-                        ChoiceRow(title: "Lautheit",
-                                  options: [("-14 LUFS", -14.0), ("-16 LUFS", -16.0), ("-18 LUFS", -18.0), ("-23 LUFS", -23.0)],
-                                  selection: $studio.exportOptions.loudness.integratedLUFS)
-                        Text("LUFS misst, wie laut eine Folge im Schnitt wirkt. Alle Stimmen und die Summe werden beim Export darauf angeglichen, damit niemand lauter oder leiser klingt. -16 ist der Standard für Podcasts (Apple Podcasts, Spotify), -14 klingt etwas lauter, -18 ruhiger, -23 entspricht der Rundfunknorm EBU R128.")
-                            .font(Arcade.read(.footnote)).foregroundStyle(Arcade.muted)
-                            .fixedSize(horizontal: false, vertical: true)
+                        LoudnessSlider()
                     }
 
                     ArcadeSection(title: "iCloud") {
@@ -246,6 +246,45 @@ struct SettingsView: View {
         case .restricted: return "eingeschränkt"
         case .temporarilyUnavailable: return "vorübergehend weg"
         default: return "unbekannt"
+        }
+    }
+}
+
+/// Export loudness as a slider (LUFS), with an explanation.
+struct LoudnessSlider: View {
+    @Environment(StudioController.self) private var studio
+
+    var body: some View {
+        @Bindable var studio = studio
+        let value = studio.exportOptions.loudness.integratedLUFS
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Lautstärke beim Export").font(Arcade.read(.body)).foregroundStyle(Arcade.ink)
+                Spacer()
+                Text("\(Int(value)) LUFS").font(Arcade.chrome(17, weight: .bold)).foregroundStyle(Arcade.accent)
+                    .monospacedDigit()
+            }
+            Slider(value: $studio.exportOptions.loudness.integratedLUFS, in: -24...(-12), step: 1) {
+                Text("Lautstärke")
+            } minimumValueLabel: {
+                Text("leiser").font(Arcade.read(.caption)).foregroundStyle(Arcade.muted)
+            } maximumValueLabel: {
+                Text("lauter").font(Arcade.read(.caption)).foregroundStyle(Arcade.muted)
+            }
+            .tint(Arcade.accent)
+            Text(hint(value))
+                .font(Arcade.read(.footnote)).foregroundStyle(Arcade.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func hint(_ v: Double) -> String {
+        let base = "Alle Stimmen und die Summe werden beim Export auf diese durchschnittliche Lautstärke gebracht, damit niemand lauter oder leiser klingt."
+        switch Int(v) {
+        case -16: return base + " -16 ist der Standard für Podcasts (Apple Podcasts, Spotify)."
+        case -14: return base + " -14 ist die Lautstärke von Musik-Streaming, etwas lauter als üblich."
+        case -23: return base + " -23 entspricht der Rundfunknorm EBU R128."
+        default: return base + " Empfehlung: -16."
         }
     }
 }

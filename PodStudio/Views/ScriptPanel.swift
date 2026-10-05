@@ -1,6 +1,7 @@
 import StudioCore
 import StudioServices
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Markdown script: rendered reader for everybody, editor for the owner (MVP: only the
 /// owner edits). The owner's reading position is mirrored to all participants.
@@ -10,6 +11,7 @@ struct ScriptPanel: View {
     @State private var editing = false
     @State private var draft = ""
     @State private var localSection = 0
+    @State private var importing = false
 
     private var activeSection: Int {
         studio.isOwner || !studio.followOwner ? localSection : studio.ownerSection
@@ -33,6 +35,18 @@ struct ScriptPanel: View {
             }
         }
         .onChange(of: studio.ownerSection) { _, s in if !studio.isOwner { localSection = s } }
+        .fileImporter(isPresented: $importing,
+                      allowedContentTypes: [UTType("net.daringfireball.markdown"), .plainText, .text].compactMap { $0 }) { result in
+            guard case .success(let url) = result else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            guard let text = try? String(contentsOf: url, encoding: .utf8) else {
+                studio.errorMessage = "Die Datei konnte nicht gelesen werden."
+                return
+            }
+            draft = text
+            studio.updateScript(text)
+        }
     }
 
     private var header: some View {
@@ -48,6 +62,9 @@ struct ScriptPanel: View {
             }
             Spacer()
             if studio.isOwner {
+                Button { importing = true } label: { Image(systemName: "square.and.arrow.down") }
+                    .buttonStyle(.arcade(.ghost, compact: true))
+                    .accessibilityLabel("Markdown-Datei importieren")
                 Button(editing ? "Fertig" : "Bearbeiten") {
                     if !editing { draft = studio.script.markdown }
                     editing.toggle()
