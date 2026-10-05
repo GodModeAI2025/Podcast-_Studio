@@ -6,3 +6,4 @@ xcuserdata/
 *.xcuserstate
 Packages/PodStudioKit/Package.resolved
 Config/Local.xcconfig
+build/

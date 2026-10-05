@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<!-- Merged with the generated Info.plist (GENERATE_INFOPLIST_FILE = YES). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSSupportsGroupActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>
