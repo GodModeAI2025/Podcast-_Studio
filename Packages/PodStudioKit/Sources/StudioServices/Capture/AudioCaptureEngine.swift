@@ -64,6 +64,7 @@ public final class AudioCaptureEngine {
     private var observers: [NSObjectProtocol] = []
     /// Set while an interruption (phone call, Siri) suspended the engine.
     private var interrupted = false
+    private var lastStartTime: TimeInterval = 0
 
     public init() {
         installNotificationObservers()
@@ -146,6 +147,7 @@ public final class AudioCaptureEngine {
             Task { @MainActor in self?.meter.process(samples, duration: duration) }
         }
         engine.prepare()
+        lastStartTime = HostClock.now()
         try engine.start()
         isRunning = true
         lastError = nil
@@ -203,8 +205,14 @@ public final class AudioCaptureEngine {
             MainActor.assumeIsolated { self?.refreshInputs() }
         })
         #endif
-        observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.recoverEngine() }
+        observers.append(center.addObserver(forName: .AVAudioEngineConfigurationChange, object: nil, queue: .main) { [weak self] note in
+            let source = note.object as AnyObject?
+            MainActor.assumeIsolated {
+                guard let self, source === self.engine else { return }  // ignore offline render engines
+                // Enabling voice processing during start() itself triggers a change.
+                guard HostClock.now() - self.lastStartTime > 1 else { return }
+                self.recoverEngine()
+            }
         })
         observers.append(center.addObserver(forName: AVCaptureDevice.wasConnectedNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshInputs() }
@@ -233,7 +241,10 @@ public final class AudioCaptureEngine {
     /// Restarts the engine after a configuration change / interruption without losing the
     /// recording (a new segment is started in the same window).
     private func recoverEngine() {
-        let wasRecording = recorder.isRecording || recorder.isSuspended
+        // Close the current segment at the restart point; the next buffer after the
+        // restart opens a new one, so the gap is placed correctly on the timeline.
+        if recorder.isRecording && !recorder.isSuspended { recorder.suspend(at: HostClock.now()) }
+        let wasRecording = recorder.isSuspended
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         isRunning = false
