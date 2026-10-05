@@ -223,12 +223,12 @@ struct SettingsView: View {
                                   selection: $studio.exportOptions.mp3.channelMode)
                         Toggle("Zusätzlich AAC (M4A)", isOn: $studio.exportOptions.alsoAAC).toggleStyle(.arcade)
                         Toggle("Zusätzlich WAV (24 Bit)", isOn: $studio.exportOptions.alsoWAV).toggleStyle(.arcade)
-                        HStack {
-                            Eyebrow("Lautheit", color: Arcade.muted)
-                            Spacer()
-                            Text("\(Int(studio.exportOptions.loudness.integratedLUFS)) LUFS")
-                                .font(Arcade.chrome(14)).foregroundStyle(Arcade.accent)
-                        }
+                        ChoiceRow(title: "Lautheit",
+                                  options: [("-14 LUFS", -14.0), ("-16 LUFS", -16.0), ("-18 LUFS", -18.0), ("-23 LUFS", -23.0)],
+                                  selection: $studio.exportOptions.loudness.integratedLUFS)
+                        Text("LUFS misst, wie laut eine Folge im Schnitt wirkt. Alle Stimmen und die Summe werden beim Export darauf angeglichen, damit niemand lauter oder leiser klingt. -16 ist der Standard für Podcasts (Apple Podcasts, Spotify), -14 klingt etwas lauter, -18 ruhiger, -23 entspricht der Rundfunknorm EBU R128.")
+                            .font(Arcade.read(.footnote)).foregroundStyle(Arcade.muted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     ArcadeSection(title: "iCloud") {
@@ -268,7 +268,8 @@ struct ChoiceRow<Value: Hashable>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Eyebrow(title, color: Arcade.muted)
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 10, alignment: .leading)],
+                      alignment: .leading, spacing: 10) {
                 ForEach(options.indices, id: \.self) { i in
                     let option = options[i]
                     Button(option.0) { selection = option.1 }

@@ -17,7 +17,7 @@ struct TransportBar: View {
                     HStack(spacing: 12) {
                         RecLamp(active: studio.transport.phase == .recording)
                         Text(format(studio.elapsed))
-                            .font(Arcade.chrome(30, weight: .heavy, relativeTo: .title))
+                            .font(Arcade.chrome(34, weight: .heavy, relativeTo: .title))
                             .monospacedDigit()
                             .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
                             .shadow(color: Arcade.accentInk, radius: 0, x: 3, y: 3)
@@ -26,7 +26,7 @@ struct TransportBar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
                     Text("Audio · 48 kHz · 24 Bit")
-                        .font(Arcade.chrome(11))
+                        .font(Arcade.chrome(12))
                         .foregroundStyle(Arcade.muted)
                 }
 

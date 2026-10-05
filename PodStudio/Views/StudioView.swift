@@ -15,6 +15,7 @@ struct StudioView: View {
     #endif
     @State private var camera = CameraController()
     @State private var panel: Panel = .script
+    @State private var stepsDismissed = false
 
     enum Panel: String, CaseIterable, Identifiable {
         case script = "Drehbuch"
@@ -40,6 +41,7 @@ struct StudioView: View {
         HStack(alignment: .top, spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    NextStepsPanel(dismissed: $stepsDismissed)
                     SelfView(camera: camera)
                     MicPanel()
                     SessionStatusPanel()
@@ -55,14 +57,18 @@ struct StudioView: View {
 
     private var compactLayout: some View {
         VStack(spacing: 0) {
+            NextStepsPanel(dismissed: $stepsDismissed)
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
             HStack(spacing: 8) {
                 ForEach(Panel.allCases) { p in
                     Button(p.rawValue) { panel = p }
                         .buttonStyle(.arcade(panel == p ? .primary : .ghost, compact: true))
+                        .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
             Group {
                 switch panel {
                 case .script: ScriptPanel()

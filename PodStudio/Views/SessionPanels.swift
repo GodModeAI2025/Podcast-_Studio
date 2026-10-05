@@ -30,10 +30,10 @@ struct SessionStatusPanel: View {
                     Monogram(name: p.displayName, color: SpeakerColors.color(for: index))
                     VStack(alignment: .leading, spacing: 1) {
                         Text(p.displayName + (p.id == studio.identity.id ? " (ich)" : ""))
-                            .font(Arcade.read(.callout).weight(.semibold))
+                            .font(Arcade.read(.body).weight(.semibold))
                             .foregroundStyle(Arcade.ink)
                         Text([p.isOwner ? "Host" : "Gast", platform(p.platform)].joined(separator: " · "))
-                            .font(Arcade.chrome(10.5))
+                            .font(Arcade.chrome(12))
                             .textCase(.uppercase)
                             .tracking(1)
                             .foregroundStyle(Arcade.muted)
@@ -76,10 +76,10 @@ private struct Badge: View {
 
     var body: some View {
         Text(text)
-            .font(Arcade.chrome(11, weight: .heavy))
+            .font(Arcade.chrome(12, weight: .heavy))
             .textCase(.uppercase)
             .foregroundStyle(Arcade.accentInk)
-            .padding(.horizontal, 7).padding(.vertical, 3)
+            .padding(.horizontal, 8).padding(.vertical, 4)
             .background(color)
     }
 }
@@ -148,7 +148,7 @@ struct DeliveryPanel: View {
                             .font(Arcade.read(.callout)).foregroundStyle(Arcade.ink).lineLimit(1)
                         if file.loudnessLUFS.isFinite {
                             Text(String(format: "%.1f LUFS · Peak %.1f dBFS", file.loudnessLUFS, file.peakDB))
-                                .font(Arcade.chrome(10.5)).foregroundStyle(Arcade.muted)
+                                .font(Arcade.chrome(12)).foregroundStyle(Arcade.muted)
                         }
                     }
                     Spacer()

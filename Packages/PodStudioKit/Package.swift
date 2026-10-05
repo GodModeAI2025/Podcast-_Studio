@@ -16,8 +16,8 @@ import PackageDescription
 let package = Package(
     name: "PodStudioKit",
     platforms: [
-        .iOS("26.0"),
-        .macOS("26.0"),
+        .iOS("27.0"),
+        .macOS("27.0"),
     ],
     products: [
         .library(name: "StudioCore", targets: ["StudioCore"]),

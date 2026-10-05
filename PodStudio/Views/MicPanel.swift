@@ -15,13 +15,14 @@ struct MicPanel: View {
             } label: {
                 HStack {
                     Text(capture.inputs.first(where: { $0.id == capture.selectedInputID })?.name ?? "Eingang wählen")
-                        .font(Arcade.chrome(14, weight: .bold))
+                        .font(Arcade.chrome(16, weight: .bold))
                         .foregroundStyle(Arcade.ink)
                         .lineLimit(1)
                     Spacer()
                     Text("▼").font(Arcade.chrome(12)).foregroundStyle(Arcade.accent)
                 }
-                .padding(12)
+                .padding(14)
+                .frame(minHeight: 48)
                 .background(Arcade.field)
                 .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
             }
@@ -31,14 +32,14 @@ struct MicPanel: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 SegmentMeter(meter: capture.meter, segments: 24)
-                    .frame(height: 18)
+                    .frame(height: 24)
                 HStack {
                     Text("RMS \(dB(capture.meter.rmsDB))")
                     Spacer()
                     Text(capture.meter.clipped ? "CLIP!" : "Peak \(dB(capture.meter.peakHoldDB))")
                         .foregroundStyle(capture.meter.clipped ? Arcade.rec : Arcade.muted)
                 }
-                .font(Arcade.chrome(11))
+                .font(Arcade.chrome(13))
                 .foregroundStyle(Arcade.muted)
             }
 

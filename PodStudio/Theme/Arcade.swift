@@ -100,7 +100,7 @@ struct HardShadow: ViewModifier {
 /// `.lp-card`: panel colour, cyan 4 px edge, small hard drop.
 struct ArcadePanel: ViewModifier {
     var accentTop: Color?
-    var padding: CGFloat = 18
+    var padding: CGFloat = 22
 
     func body(content: Content) -> some View {
         content
@@ -117,7 +117,7 @@ struct ArcadePanel: ViewModifier {
 }
 
 extension View {
-    func arcadePanel(accentTop: Color? = nil, padding: CGFloat = 18) -> some View {
+    func arcadePanel(accentTop: Color? = nil, padding: CGFloat = 22) -> some View {
         modifier(ArcadePanel(accentTop: accentTop, padding: padding))
     }
 
@@ -147,9 +147,9 @@ struct Eyebrow: View {
 
     var body: some View {
         Text(text)
-            .font(Arcade.chrome(12, weight: .bold, relativeTo: .caption))
+            .font(Arcade.chrome(13, weight: .bold, relativeTo: .caption))
             .textCase(.uppercase)
-            .tracking(3)
+            .tracking(2.5)
             .foregroundStyle(color)
     }
 }
@@ -161,7 +161,7 @@ struct ArcadeSection<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 18) {
             Eyebrow(title, color: accent ?? Arcade.line)
             content
         }
@@ -181,12 +181,13 @@ struct ArcadeButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
         configuration.label
-            .font(Arcade.chrome(compact ? 12 : 14, weight: .heavy, relativeTo: .callout))
+            .font(Arcade.chrome(compact ? 14 : 16, weight: .heavy, relativeTo: .callout))
             .textCase(.uppercase)
             .tracking(1)
             .lineLimit(1)
-            .padding(.horizontal, compact ? 12 : 20)
-            .padding(.vertical, compact ? 7 : 12)
+            .padding(.horizontal, compact ? 14 : 22)
+            .padding(.vertical, compact ? 11 : 15)
+            .frame(minHeight: compact ? 44 : 52)
             .foregroundStyle(foreground)
             .background(background)
             .overlay(Rectangle().strokeBorder(border, lineWidth: 3))
@@ -241,14 +242,15 @@ struct ArcadeToggleStyle: ToggleStyle {
         Button { configuration.isOn.toggle() } label: {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(configuration.isOn ? "[X]" : "[ ]")
-                    .font(Arcade.chrome(15, weight: .heavy))
+                    .font(Arcade.chrome(18, weight: .heavy))
                     .foregroundStyle(configuration.isOn ? Arcade.accent : Arcade.muted)
                 configuration.label
-                    .font(Arcade.read(.callout))
+                    .font(Arcade.read(.body))
                     .foregroundStyle(Arcade.ink)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
             }
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -268,15 +270,15 @@ struct ScoreView: View {
     var body: some View {
         VStack(spacing: 6) {
             Text(value)
-                .font(Arcade.chrome(34, weight: .heavy, relativeTo: .largeTitle))
+                .font(Arcade.chrome(40, weight: .heavy, relativeTo: .largeTitle))
                 .monospacedDigit()
                 .foregroundStyle(color)
                 .shadow(color: Arcade.accentInk, radius: 0, x: 3, y: 3)
                 .contentTransition(.numericText())
             Text(label)
-                .font(Arcade.chrome(11, relativeTo: .caption2))
+                .font(Arcade.chrome(12, relativeTo: .caption))
                 .textCase(.uppercase)
-                .tracking(2)
+                .tracking(1.5)
                 .foregroundStyle(Arcade.muted)
         }
     }
@@ -289,9 +291,9 @@ struct Monogram: View {
 
     var body: some View {
         Text(String(name.trimmingCharacters(in: .whitespaces).prefix(1)).uppercased())
-            .font(Arcade.chrome(15, weight: .heavy))
+            .font(Arcade.chrome(18, weight: .heavy))
             .foregroundStyle(Arcade.accentInk)
-            .frame(width: 30, height: 30)
+            .frame(width: 38, height: 38)
             .background(color)
             .overlay(Rectangle().strokeBorder(Arcade.accentInk, lineWidth: 2))
     }

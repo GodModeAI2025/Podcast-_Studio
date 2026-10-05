@@ -1,6 +1,6 @@
 # PodStudio
 
-Native, Apple-only Podcast-Studio-App (iOS 26+ / macOS 26+) nach dem Riverside-Prinzip:
+Native, Apple-only Podcast-Studio-App (iOS 27+ / macOS 27+) nach dem Riverside-Prinzip:
 Jedes Gerät nimmt **lokal in Studioqualität** auf (48 kHz / 24 Bit). Das Internet trägt nur
 Live-Kommunikation (SharePlay/FaceTime), Sync (Drehbuch, REC-Befehle, Marker) und am Ende den
 Transfer der Tracks per CloudKit zum Owner. Der Owner mischt und exportiert **eine MP3 je
@@ -11,7 +11,7 @@ Optik: Arcade-Look nach „Think Different, Think AI“ (siehe `docs/ARCHITECTUR
 ## Projektstruktur
 
 ```
-PodStudio.xcodeproj           Multiplatform-App-Target (iOS + macOS), Xcode 26
+PodStudio.xcodeproj           Multiplatform-App-Target (iOS + macOS), Xcode 27
 PodStudio/                    SwiftUI-App (synchronisierte Gruppe, neue Dateien werden automatisch erkannt)
   PodStudioApp.swift, AppDelegate.swift (Silent Push)
   Theme/Arcade.swift          Design-Tokens und Bausteine (Farben, Courier-Chrome, Panels, Buttons)
@@ -38,7 +38,7 @@ docs/ACCEPTANCE.md            Abnahme-Checklisten Loop 1–5
 | M8 StorageService | `StudioCore/Storage/*` (Session-Store, crash-sicheres WAV, Recovery-Scan) |
 | Orchestrierung | `StudioServices/StudioController.swift` |
 
-## Loslegen (Mac mit Xcode 26)
+## Loslegen (Mac mit Xcode 27)
 
 1. `Config/PodStudio.xcconfig`: `PODSTUDIO_BUNDLE_ID` und `DEVELOPMENT_TEAM` setzen
    (oder eine nicht eingecheckte `Config/Local.xcconfig` anlegen).
