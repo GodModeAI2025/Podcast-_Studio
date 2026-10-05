@@ -39,7 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
         guard let studio else { return }
-        Task { _ = await studio.handleRemoteNotification(userInfo) }
+        // Parsed synchronously; only the zone refresh runs asynchronously.
+        _ = studio.handleRemotePush(userInfo)
     }
 
     func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {

@@ -3,8 +3,9 @@
 import Foundation
 import Observation
 
-/// Local camera preview (M1/M4). Remote participants are shown by FaceTime's own
-/// SharePlay UI in the MVP (AD6); video recording is a post-MVP item (open point 2).
+/// Local camera self-view (M1). Video is never recorded — sessions produce audio only.
+/// Remote participants are shown by FaceTime's own
+/// SharePlay UI (AD6).
 @MainActor
 @Observable
 public final class CameraController {
@@ -54,7 +55,7 @@ public final class CameraController {
         let error: String? = await withCheckedContinuation { cont in
             sessionQueue.async {
                 session.beginConfiguration()
-                session.sessionPreset = .high
+                session.sessionPreset = .medium  // self-view only, never recorded
                 session.inputs.forEach { session.removeInput($0) }
                 var failure: String?
                 do {

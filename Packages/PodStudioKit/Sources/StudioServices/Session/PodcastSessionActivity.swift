@@ -27,7 +27,9 @@ public struct PodcastSessionActivity: GroupActivity, Transferable, Sendable {
         m.title = title
         m.subtitle = "Podcast-Aufnahme mit \(ownerName)"
         m.type = .generic
+        #if os(iOS)
         m.supportsContinuationOnTV = false
+        #endif
         return m
     }
 

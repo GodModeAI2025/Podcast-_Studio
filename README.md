@@ -5,6 +5,8 @@ Jedes Gerät nimmt **lokal in Studioqualität** auf (48 kHz / 24 Bit). Das Inter
 Live-Kommunikation (SharePlay/FaceTime), Sync (Drehbuch, REC-Befehle, Marker) und am Ende den
 Transfer der Tracks per CloudKit zum Owner. Der Owner mischt und exportiert **eine MP3 je
 Sprecher + eine Summen-MP3** bei ~ -16 LUFS. Ein eigenes Backend gibt es nicht.
+Video wird nicht aufgenommen; die Kamera ist nur Selbstansicht, das Ergebnis ist reines Audio.
+Optik: Arcade-Look nach „Think Different, Think AI“ (siehe `docs/ARCHITECTURE.md`, Gestaltung).
 
 ## Projektstruktur
 
@@ -12,6 +14,7 @@ Sprecher + eine Summen-MP3** bei ~ -16 LUFS. Ein eigenes Backend gibt es nicht.
 PodStudio.xcodeproj           Multiplatform-App-Target (iOS + macOS), Xcode 26
 PodStudio/                    SwiftUI-App (synchronisierte Gruppe, neue Dateien werden automatisch erkannt)
   PodStudioApp.swift, AppDelegate.swift (Silent Push)
+  Theme/Arcade.swift          Design-Tokens und Bausteine (Farben, Courier-Chrome, Panels, Buttons)
   Views/                      Studio, Drehbuch, Mikrofon, Session-Status, Material/Export, Transport
 Config/                       Info.plist, Entitlements (iOS/macOS), PodStudio.xcconfig (Bundle-ID, Team)
 Packages/PodStudioKit/        Swift Package mit der gesamten Logik

@@ -3,60 +3,40 @@ import StudioServices
 import SwiftUI
 
 /// REC / Pause / Stop / Marker — synchronised: every device executes the command at the
-/// same shared-clock time.
+/// same shared-clock time. Styled as the `.lp-score` strip: big yellow digits on dark blue.
 struct TransportBar: View {
     @Environment(StudioController.self) private var studio
     @State private var markerNote = ""
     @State private var showMarker = false
 
     var body: some View {
-        HStack(spacing: 16) {
-            TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(studio.transport.phase == .recording ? Color.red : Color.secondary.opacity(0.4))
-                        .frame(width: 10, height: 10)
-                    Text(format(studio.elapsed))
-                        .font(.system(.title3, design: .monospaced).weight(.semibold))
-                        .contentTransition(.numericText())
+        VStack(spacing: 0) {
+            Rectangle().fill(Arcade.line).frame(height: Arcade.edge)
+            HStack(spacing: 18) {
+                TimelineView(.periodic(from: .now, by: 0.1)) { _ in
+                    HStack(spacing: 12) {
+                        RecLamp(active: studio.transport.phase == .recording)
+                        Text(format(studio.elapsed))
+                            .font(Arcade.chrome(30, weight: .heavy, relativeTo: .title))
+                            .monospacedDigit()
+                            .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
+                            .shadow(color: Arcade.accentInk, radius: 0, x: 3, y: 3)
+                    }
                 }
-            }
-            .frame(minWidth: 130, alignment: .leading)
-
-            Spacer()
-
-            if studio.transport.phase == .idle {
-                Button { studio.issue(.start) } label: {
-                    Label("Aufnahme", systemImage: "record.circle")
+                VStack(alignment: .leading, spacing: 2) {
+                    Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
+                    Text("Audio · 48 kHz · 24 Bit")
+                        .font(Arcade.chrome(11))
+                        .foregroundStyle(Arcade.muted)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .disabled(!studio.canIssue(.start))
-                .keyboardShortcut("r", modifiers: .command)
+
+                Spacer(minLength: 8)
+                buttons
             }
-            if studio.transport.phase == .recording {
-                Button { studio.issue(.pause) } label: { Label("Pause", systemImage: "pause.fill") }
-                    .buttonStyle(.bordered)
-            }
-            if studio.transport.phase == .paused {
-                Button { studio.issue(.resume) } label: { Label("Fortsetzen", systemImage: "record.circle") }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-            }
-            if studio.transport.phase == .recording || studio.transport.phase == .paused {
-                Button { studio.issue(.stop) } label: { Label("Stopp", systemImage: "stop.fill") }
-                    .buttonStyle(.bordered)
-                    .keyboardShortcut(".", modifiers: .command)
-                Button { showMarker = true } label: { Label("Marker", systemImage: "bookmark") }
-                    .buttonStyle(.bordered)
-                    .keyboardShortcut("m", modifiers: .command)
-            }
-            if studio.transport.phase == .stopped || studio.current?.state == .finished {
-                Label("Aufnahme beendet", systemImage: "checkmark.circle")
-                    .foregroundStyle(.green)
-            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 14)
+            .background(Arcade.bar)
         }
-        .labelStyle(.titleAndIcon)
         .alert("Marker setzen", isPresented: $showMarker) {
             TextField("Notiz (optional)", text: $markerNote)
             Button("Setzen") {
@@ -67,8 +47,67 @@ struct TransportBar: View {
         }
     }
 
+    @ViewBuilder private var buttons: some View {
+        HStack(spacing: 12) {
+            switch studio.transport.phase {
+            case .idle:
+                Button("● Rec") { studio.issue(.start) }
+                    .buttonStyle(.arcadeRec)
+                    .disabled(!studio.canIssue(.start))
+                    .keyboardShortcut("r", modifiers: .command)
+                    .help(studio.canIssue(.start) ? "Aufnahme auf allen Geräten starten" : "Warte auf Uhren-Sync bzw. Session ist bereits aufgenommen")
+            case .recording:
+                Button("Marker") { showMarker = true }
+                    .buttonStyle(.arcadeGhost)
+                    .keyboardShortcut("m", modifiers: .command)
+                Button("Pause") { studio.issue(.pause) }
+                    .buttonStyle(.arcade)
+                Button("■ Stopp") { studio.issue(.stop) }
+                    .buttonStyle(.arcade(.danger))
+                    .keyboardShortcut(".", modifiers: .command)
+            case .paused:
+                Button("Marker") { showMarker = true }
+                    .buttonStyle(.arcadeGhost)
+                Button("● Weiter") { studio.issue(.resume) }
+                    .buttonStyle(.arcadeRec)
+                Button("■ Stopp") { studio.issue(.stop) }
+                    .buttonStyle(.arcade(.danger))
+            case .stopped:
+                Text("Aufnahme beendet")
+                    .font(Arcade.chrome(13, weight: .heavy))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Arcade.ok)
+            }
+        }
+    }
+
+    private var phaseLabel: String {
+        switch studio.transport.phase {
+        case .idle: return studio.current?.state == .finished ? "Fertig" : "Bereit"
+        case .recording: return "Aufnahme läuft"
+        case .paused: return "Pausiert"
+        case .stopped: return "Gestoppt"
+        }
+    }
+
     private func format(_ t: TimeInterval) -> String {
         let total = Int(t)
         return String(format: "%02d:%02d:%02d", total / 3600, (total / 60) % 60, total % 60)
+    }
+}
+
+/// Square REC lamp that blinks while recording.
+private struct RecLamp: View {
+    let active: Bool
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.5)) { context in
+            let on = active && Int(context.date.timeIntervalSinceReferenceDate * 2) % 2 == 0
+            Rectangle()
+                .fill(on ? Arcade.rec : Arcade.rec.opacity(active ? 0.35 : 0.15))
+                .frame(width: 16, height: 16)
+                .overlay(Rectangle().strokeBorder(Arcade.accentInk, lineWidth: 2))
+        }
+        .accessibilityLabel(active ? "Aufnahme läuft" : "Keine Aufnahme")
     }
 }

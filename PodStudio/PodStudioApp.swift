@@ -16,6 +16,8 @@ struct PodStudioApp: App {
         WindowGroup {
             RootView()
                 .environment(studio)
+                .preferredColorScheme(.dark)
+                .tint(Arcade.accent)
                 .task {
                     appDelegate.studio = studio
                     await studio.start()
@@ -34,8 +36,9 @@ struct PodStudioApp: App {
         Settings {
             SettingsView()
                 .environment(studio)
-                .frame(width: 460)
-                .padding()
+                .preferredColorScheme(.dark)
+                .tint(Arcade.accent)
+                .frame(width: 480, height: 520)
         }
         #endif
     }

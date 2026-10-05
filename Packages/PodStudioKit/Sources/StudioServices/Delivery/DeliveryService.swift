@@ -115,10 +115,13 @@ public final class DeliveryService {
         _ = try await withRetry { try await db.modifySubscriptions(saving: [subscription], deleting: []) }
     }
 
+    public nonisolated static func isDeliveryNotification(_ userInfo: [AnyHashable: Any]) -> Bool {
+        CKNotification(fromRemoteNotificationDictionary: userInfo)?.subscriptionID == DeliverySchema.subscriptionID
+    }
+
     /// Handles a remote notification. Returns `true` if it belonged to PodStudio.
     public func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async -> Bool {
-        guard let note = CKNotification(fromRemoteNotificationDictionary: userInfo),
-              note.subscriptionID == DeliverySchema.subscriptionID else { return false }
+        guard Self.isDeliveryNotification(userInfo) else { return false }
         await refreshAllZones()
         return true
     }

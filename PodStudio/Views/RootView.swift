@@ -13,18 +13,16 @@ struct RootView: View {
         @Bindable var studio = studio
         NavigationSplitView {
             SessionListView(showNewSession: $showNewSession)
-                .navigationTitle("PodStudio")
+                #if os(macOS)
+                .navigationSplitViewColumnWidth(min: 240, ideal: 280)
+                #endif
         } detail: {
-            if studio.current != nil {
-                StudioView()
-            } else {
-                ContentUnavailableView {
-                    Label("Keine Session geöffnet", systemImage: "mic.badge.plus")
-                } description: {
-                    Text("Starte eine neue Session und lade Gäste per SharePlay über Nachrichten oder FaceTime ein.")
-                } actions: {
-                    Button("Neue Session") { showNewSession = true }
-                        .buttonStyle(.borderedProminent)
+            ZStack {
+                ArcadeBackground()
+                if studio.current != nil {
+                    StudioView()
+                } else {
+                    WelcomeView(showNewSession: $showNewSession)
                 }
             }
         }
@@ -54,35 +52,81 @@ struct RootView: View {
     }
 }
 
+/// Landing ("Hero") when no session is open.
+private struct WelcomeView: View {
+    @Binding var showNewSession: Bool
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                Eyebrow("Podcast-Studio · iPhone + Mac")
+                Text("Aufnehmen wie im Studio.\nVerbunden über SharePlay.")
+                    .arcadeHeadline(40, shadow: 5)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Jedes Gerät nimmt lokal in 48 kHz / 24 Bit auf. Das Netz trägt nur Gespräch, Drehbuch und Startsignal. Am Ende landen alle Spuren bei dir: eine MP3 je Stimme und die Summe, fertig auf -16 LUFS.")
+                    .font(Arcade.read(.title3))
+                    .foregroundStyle(Arcade.ink)
+                    .frame(maxWidth: 560, alignment: .leading)
+                HStack(spacing: 14) {
+                    Button("Neue Session") { showNewSession = true }
+                        .buttonStyle(.arcade)
+                }
+                HStack(spacing: 18) {
+                    feature("01", "Einladen", "Link über Nachrichten oder FaceTime. Kein Konto, kein Server.")
+                    feature("02", "Aufnehmen", "REC startet auf allen Geräten am selben Sample.")
+                    feature("03", "Abholen", "Spuren kommen per iCloud. Mischen, MP3, fertig.")
+                }
+            }
+            .padding(40)
+            .frame(maxWidth: 1000, alignment: .leading)
+        }
+    }
+
+    private func feature(_ n: String, _ title: String, _ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(n).font(Arcade.chrome(13)).foregroundStyle(Arcade.line)
+            Text(title).arcadeHeadline(17, shadow: 2)
+            Text(text).font(Arcade.read(.callout)).foregroundStyle(Arcade.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .arcadePanel()
+    }
+}
+
 struct SessionListView: View {
     @Environment(StudioController.self) private var studio
     @Binding var showNewSession: Bool
 
     var body: some View {
-        List(selection: Binding(get: { studio.current?.id }, set: { id in
-            if let id, let m = studio.sessions.first(where: { $0.id == id }) { studio.open(m) }
-        })) {
-            ForEach(studio.sessions) { session in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(session.title).font(.headline)
-                    HStack(spacing: 6) {
-                        Image(systemName: session.isOwner ? "crown" : "person.wave.2")
-                        Text(session.createdAt, style: .date)
-                        Text(stateLabel(session.state))
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("PodStudio").arcadeHeadline(20, shadow: 2)
+                    Spacer()
+                    Button { showNewSession = true } label: { Text("+ Neu") }
+                        .buttonStyle(.arcade(.primary, compact: true))
+                        .keyboardShortcut("n", modifiers: .command)
                 }
-                .tag(session.id)
-                .contextMenu {
-                    Button("Löschen", role: .destructive) { studio.delete(session) }
+                .padding(.bottom, 22)
+
+                Eyebrow("Sessions · \(studio.sessions.count)")
+                    .padding(.bottom, 8)
+                Rectangle().fill(Arcade.line).frame(height: 3)
+
+                ForEach(studio.sessions) { session in
+                    row(session)
+                }
+                if studio.sessions.isEmpty {
+                    Text("Noch keine Session.")
+                        .font(Arcade.read(.callout))
+                        .foregroundStyle(Arcade.muted)
+                        .padding(.vertical, 14)
                 }
             }
+            .padding(18)
         }
+        .background(Arcade.bar)
         .toolbar {
-            ToolbarItem {
-                Button { showNewSession = true } label: { Label("Neue Session", systemImage: "plus") }
-            }
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
                 NavigationLink { SettingsView() } label: { Label("Einstellungen", systemImage: "gearshape") }
@@ -91,13 +135,58 @@ struct SessionListView: View {
         }
     }
 
+    private func row(_ session: SessionManifest) -> some View {
+        let selected = studio.current?.id == session.id
+        return Button {
+            studio.open(session)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Text(session.isOwner ? "HOST" : "GAST")
+                    .font(Arcade.chrome(10, weight: .heavy))
+                    .tracking(1)
+                    .foregroundStyle(session.isOwner ? Arcade.accentInk : Arcade.ink)
+                    .padding(.horizontal, 5).padding(.vertical, 3)
+                    .background(session.isOwner ? Arcade.accent : Arcade.panelStrong)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(session.title)
+                        .font(Arcade.read(.body).weight(.semibold))
+                        .foregroundStyle(selected ? Arcade.accent : Arcade.ink)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 8) {
+                        Text(session.createdAt, format: .dateTime.day().month().year())
+                        Text(stateLabel(session.state))
+                    }
+                    .font(Arcade.chrome(11))
+                    .textCase(.uppercase)
+                    .foregroundStyle(session.state == .recording ? Arcade.rec : Arcade.muted)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
+            .background(selected ? Arcade.panelStrong : .clear)
+            .overlay(alignment: .leading) {
+                if selected { Rectangle().fill(Arcade.accent).frame(width: 4) }
+            }
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Arcade.line.opacity(0.16)).frame(height: 1)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button("Löschen", role: .destructive) { studio.delete(session) }
+        }
+    }
+
     private func stateLabel(_ s: RecordingState) -> String {
         switch s {
         case .idle: return "bereit"
-        case .recording: return "● Aufnahme"
-        case .paused: return "pausiert"
+        case .recording: return "● rec"
+        case .paused: return "pause"
         case .finished: return "fertig"
-        case .recovered: return "wiederhergestellt"
+        case .recovered: return "gerettet"
         }
     }
 }
@@ -108,31 +197,55 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var studio = studio
-        Form {
-            Section("Profil") {
-                TextField("Anzeigename", text: $name)
-                    .onSubmit { studio.rename(name) }
-                    .onDisappear { if !name.isEmpty { studio.rename(name) } }
-            }
-            Section("Export") {
-                Picker("MP3-Bitrate", selection: $studio.exportOptions.mp3.bitrateKbps) {
-                    ForEach([128, 160, 192], id: \.self) { Text("\($0) kbps").tag($0) }
+        ZStack {
+            ArcadeBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text("Einstellungen").arcadeHeadline(26)
+
+                    ArcadeSection(title: "Profil") {
+                        TextField("Anzeigename", text: $name)
+                            .textFieldStyle(.plain)
+                            .font(Arcade.chrome(16))
+                            .foregroundStyle(Arcade.ink)
+                            .padding(12)
+                            .background(Arcade.field)
+                            .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
+                            .onSubmit { studio.rename(name) }
+                        Text("So sehen dich die anderen in der Session und in den Dateinamen.")
+                            .font(Arcade.read(.caption)).foregroundStyle(Arcade.muted)
+                    }
+
+                    ArcadeSection(title: "Export") {
+                        ChoiceRow(title: "MP3-Bitrate", options: [128, 160, 192].map { ("\($0) kbps", $0) },
+                                  selection: $studio.exportOptions.mp3.bitrateKbps)
+                        ChoiceRow(title: "Kanäle", options: [("Mono", MP3Settings.ChannelMode.mono), ("Stereo", .stereo)],
+                                  selection: $studio.exportOptions.mp3.channelMode)
+                        Toggle("Zusätzlich AAC (M4A)", isOn: $studio.exportOptions.alsoAAC).toggleStyle(.arcade)
+                        Toggle("Zusätzlich WAV (24 Bit)", isOn: $studio.exportOptions.alsoWAV).toggleStyle(.arcade)
+                        HStack {
+                            Eyebrow("Lautheit", color: Arcade.muted)
+                            Spacer()
+                            Text("\(Int(studio.exportOptions.loudness.integratedLUFS)) LUFS")
+                                .font(Arcade.chrome(14)).foregroundStyle(Arcade.accent)
+                        }
+                    }
+
+                    ArcadeSection(title: "iCloud") {
+                        HStack {
+                            Text("Account").font(Arcade.read()).foregroundStyle(Arcade.ink)
+                            Spacer()
+                            Text(accountLabel).font(Arcade.chrome(13)).textCase(.uppercase)
+                                .foregroundStyle(studio.delivery.accountStatus == .available ? Arcade.ok : Arcade.warn)
+                        }
+                    }
                 }
-                Picker("Kanäle", selection: $studio.exportOptions.mp3.channelMode) {
-                    Text("Mono").tag(MP3Settings.ChannelMode.mono)
-                    Text("Stereo").tag(MP3Settings.ChannelMode.stereo)
-                }
-                Toggle("Zusätzlich AAC (M4A)", isOn: $studio.exportOptions.alsoAAC)
-                Toggle("Zusätzlich WAV (24 Bit)", isOn: $studio.exportOptions.alsoWAV)
-                LabeledContent("Lautheit", value: "\(Int(studio.exportOptions.loudness.integratedLUFS)) LUFS")
-            }
-            Section("iCloud") {
-                LabeledContent("Account", value: accountLabel)
+                .padding(28)
             }
         }
-        .formStyle(.grouped)
         .navigationTitle("Einstellungen")
         .onAppear { name = studio.identity.displayName }
+        .onDisappear { if !name.isEmpty { studio.rename(name) } }
     }
 
     private var accountLabel: String {
@@ -140,8 +253,28 @@ struct SettingsView: View {
         case .available: return "verfügbar"
         case .noAccount: return "nicht angemeldet"
         case .restricted: return "eingeschränkt"
-        case .temporarilyUnavailable: return "vorübergehend nicht verfügbar"
+        case .temporarilyUnavailable: return "vorübergehend weg"
         default: return "unbekannt"
+        }
+    }
+}
+
+/// Segmented choice as a row of arcade buttons.
+struct ChoiceRow<Value: Hashable>: View {
+    let title: String
+    let options: [(String, Value)]
+    @Binding var selection: Value
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Eyebrow(title, color: Arcade.muted)
+            HStack(spacing: 10) {
+                ForEach(options.indices, id: \.self) { i in
+                    let option = options[i]
+                    Button(option.0) { selection = option.1 }
+                        .buttonStyle(.arcade(selection == option.1 ? .primary : .ghost, compact: true))
+                }
+            }
         }
     }
 }

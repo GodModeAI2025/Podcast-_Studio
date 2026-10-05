@@ -654,5 +654,13 @@ public final class StudioController {
     public func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) async -> Bool {
         await delivery.handleRemoteNotification(userInfo)
     }
+
+    /// Synchronous variant (macOS delegate): checks the payload, refreshes in the background.
+    @discardableResult
+    public func handleRemotePush(_ userInfo: [AnyHashable: Any]) -> Bool {
+        guard DeliveryService.isDeliveryNotification(userInfo) else { return false }
+        Task { await delivery.refreshAllZones() }
+        return true
+    }
 }
 #endif

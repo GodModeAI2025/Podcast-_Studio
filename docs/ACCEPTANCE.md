@@ -6,7 +6,7 @@ Legende: ✅ automatisiert verifiziert · 🧪 Unit-Test vorhanden · 📱 manue
 
 - [x] Projekt: Multiplatform (iOS + macOS), SwiftUI, Swift 6, Capabilities Group Activities + iCloud (+ Push)
 - [x] Mic-Auswahl, Voice Processing, Mic-Modes-Picker, AirPods-HQ-Option, Level-Metering
-- [x] Lokale Aufnahme PCM 48 kHz / 24 Bit (crash-sicheres WAV) → ALAC
+- [x] Lokale Aufnahme PCM 48 kHz / 24 Bit (crash-sicheres WAV) → ALAC — **nur Audio**, Kamera ist reine Selbstansicht
 - [x] MP3-Export (LAME 3.100, CBR 128–192 kbps, Mono/Stereo, ID3v2) 🧪
 
 | Kriterium | Stand |

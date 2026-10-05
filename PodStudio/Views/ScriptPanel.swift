@@ -4,6 +4,7 @@ import SwiftUI
 
 /// Markdown script: rendered reader for everybody, editor for the owner (MVP: only the
 /// owner edits). The owner's reading position is mirrored to all participants.
+/// Headings in Courier uppercase (chrome), running text proportional (read).
 struct ScriptPanel: View {
     @Environment(StudioController.self) private var studio
     @State private var editing = false
@@ -17,12 +18,15 @@ struct ScriptPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider()
             if editing {
                 TextEditor(text: $draft)
                     .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(Arcade.ink)
                     .scrollContentBackground(.hidden)
-                    .padding(8)
+                    .padding(12)
+                    .background(Arcade.field)
+                    .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
+                    .padding(18)
                     .onChange(of: draft) { _, text in studio.updateScript(text) }
             } else {
                 reader
@@ -32,28 +36,39 @@ struct ScriptPanel: View {
     }
 
     private var header: some View {
-        HStack {
-            Label("Drehbuch", systemImage: "text.alignleft").font(.headline)
-            Text("Rev. \(studio.script.revision)").font(.caption).foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Eyebrow("Drehbuch · Rev. \(studio.script.revision)")
+                if let title = studio.parsedScript.sections.first(where: { $0.id == activeSection })?.title {
+                    Text(title)
+                        .font(Arcade.chrome(14, weight: .heavy))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Arcade.ink)
+                        .lineLimit(1)
+                }
+            }
             Spacer()
             if studio.isOwner {
-                Toggle(isOn: $editing) { Label(editing ? "Fertig" : "Bearbeiten", systemImage: "pencil") }
-                    .toggleStyle(.button)
-                    .onChange(of: editing) { _, on in if on { draft = studio.script.markdown } }
+                Button(editing ? "Fertig" : "Bearbeiten") {
+                    if !editing { draft = studio.script.markdown }
+                    editing.toggle()
+                }
+                .buttonStyle(.arcade(editing ? .primary : .ghost, compact: true))
             } else {
-                Toggle(isOn: Bindable(studio).followOwner) { Label("Folgen", systemImage: "arrow.down.to.line") }
-                    .toggleStyle(.button)
+                Button(studio.followOwner ? "Folge Host" : "Frei lesen") { studio.followOwner.toggle() }
+                    .buttonStyle(.arcade(studio.followOwner ? .primary : .ghost, compact: true))
                     .help("Automatisch zur Stelle scrollen, die der Host gerade liest")
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 14)
+        .overlay(alignment: .bottom) { Rectangle().fill(Arcade.line.opacity(0.3)).frame(height: 2) }
     }
 
     private var reader: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10) {
+                LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(studio.parsedScript.blocks) { block in
                         BlockView(block: block, highlighted: block.section == activeSection)
                             .id(block.id)
@@ -64,8 +79,9 @@ struct ScriptPanel: View {
                             }
                     }
                 }
-                .padding()
-                .frame(maxWidth: 760, alignment: .leading)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 22)
+                .frame(maxWidth: 780, alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
             .onChange(of: activeSection) { _, section in
@@ -73,19 +89,18 @@ struct ScriptPanel: View {
                 withAnimation(.easeInOut(duration: 0.35)) { proxy.scrollTo(first, anchor: .top) }
             }
             .overlay(alignment: .bottomTrailing) {
-                if studio.isOwner { sectionStepper.padding() }
+                if studio.isOwner { sectionStepper.padding(20) }
             }
         }
     }
 
     /// Owner: step through sections (teleprompter style).
     private var sectionStepper: some View {
-        HStack(spacing: 4) {
-            Button { step(-1) } label: { Image(systemName: "chevron.up") }
-            Button { step(1) } label: { Image(systemName: "chevron.down") }
+        HStack(spacing: 10) {
+            Button("▲") { step(-1) }.buttonStyle(.arcade(.ghost, compact: true))
+            Button("▼ Weiter") { step(1) }.buttonStyle(.arcade(.primary, compact: true))
+                .keyboardShortcut(.downArrow, modifiers: [.command])
         }
-        .buttonStyle(.bordered)
-        .controlSize(.large)
     }
 
     private func step(_ delta: Int) {
@@ -103,37 +118,57 @@ private struct BlockView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 2)
-            .padding(.horizontal, 8)
-            .background(highlighted ? Color.accentColor.opacity(0.10) : .clear, in: RoundedRectangle(cornerRadius: 6))
+            .padding(.vertical, 4)
+            .padding(.leading, 14)
+            .padding(.trailing, 8)
+            .background(highlighted ? Arcade.panelStrong.opacity(0.55) : .clear)
             .overlay(alignment: .leading) {
-                if highlighted {
-                    Rectangle().fill(Color.accentColor).frame(width: 3)
-                }
+                Rectangle().fill(highlighted ? Arcade.accentHot : .clear).frame(width: 4)
             }
     }
 
     @ViewBuilder private var content: some View {
         switch block.kind {
         case .heading(let level):
-            Text(inline(block.text)).font(level == 1 ? .largeTitle.bold() : level == 2 ? .title2.bold() : .title3.weight(.semibold))
-                .padding(.top, level <= 2 ? 8 : 4)
+            Text(inline(block.text))
+                .arcadeHeadline(level == 1 ? 30 : level == 2 ? 21 : 16,
+                                color: level <= 2 ? Arcade.accent : Arcade.line,
+                                shadow: level == 1 ? 4 : 2)
+                .padding(.top, level <= 2 ? 14 : 6)
         case .paragraph:
-            Text(inline(block.text)).font(.title3)
+            Text(inline(block.text)).font(Arcade.read(.title3)).foregroundStyle(Arcade.ink)
+                .lineSpacing(5)
         case .bullet:
-            HStack(alignment: .firstTextBaseline) { Text("•"); Text(inline(block.text)) }.font(.title3)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("▸").font(Arcade.chrome(16)).foregroundStyle(Arcade.accent)
+                Text(inline(block.text)).font(Arcade.read(.title3)).foregroundStyle(Arcade.ink)
+            }
         case .numbered(let n):
-            HStack(alignment: .firstTextBaseline) { Text("\(n)."); Text(inline(block.text)) }.font(.title3)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(String(format: "%02d", n)).font(Arcade.chrome(15, weight: .heavy)).foregroundStyle(Arcade.line)
+                Text(inline(block.text)).font(Arcade.read(.title3)).foregroundStyle(Arcade.ink)
+            }
         case .quote:
-            Text(inline(block.text)).font(.title3.italic()).foregroundStyle(.secondary)
-                .padding(.leading, 12)
-                .overlay(alignment: .leading) { Rectangle().fill(.secondary).frame(width: 2) }
+            // `.lp-quote`: coloured top edge, big quote mark, Courier bold in accent colour.
+            VStack(alignment: .leading, spacing: 4) {
+                Text("“").font(Arcade.chrome(44, weight: .heavy)).foregroundStyle(Arcade.accentHot.opacity(0.55))
+                    .frame(height: 22, alignment: .top)
+                Text(inline(block.text))
+                    .font(Arcade.chrome(18, weight: .bold))
+                    .foregroundStyle(Arcade.accentHot)
+                    .shadow(color: Arcade.accentInk, radius: 0, x: 2, y: 2)
+            }
+            .arcadePanel(accentTop: Arcade.accentHot, padding: 16)
+            .padding(.vertical, 4)
         case .code:
             Text(block.text).font(.system(.body, design: .monospaced))
-                .padding(8)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+                .foregroundStyle(Arcade.ink)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Arcade.field)
+                .overlay(Rectangle().strokeBorder(Arcade.line.opacity(0.5), lineWidth: 2))
         case .rule:
-            Divider()
+            Rectangle().fill(Arcade.line).frame(height: 3).padding(.vertical, 6)
         }
     }
 

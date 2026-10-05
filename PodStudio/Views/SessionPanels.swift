@@ -8,56 +8,96 @@ import AppKit
 struct SessionStatusPanel: View {
     @Environment(StudioController.self) private var studio
 
+    private var people: [ParticipantInfo] {
+        Array(studio.participants.values).sorted {
+            $0.isOwner != $1.isOwner ? $0.isOwner : $0.displayName < $1.displayName
+        }
+    }
+
     var body: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                LabeledContent("SharePlay", value: sharePlayLabel)
-                if !studio.isOwner {
-                    LabeledContent("Uhr-Sync", value: clockLabel)
-                }
-                Divider()
-                ForEach(Array(studio.participants.values).sorted { $0.displayName < $1.displayName }) { p in
-                    HStack {
-                        Image(systemName: p.platform == .macOS ? "laptopcomputer" : p.platform == .iOS ? "iphone" : "person")
+        ArcadeSection(title: "Session") {
+            HStack(alignment: .top) {
+                ScoreView(value: "\(people.count)", label: "Stimmen")
+                Spacer()
+                ScoreView(value: "\(studio.current?.markers.count ?? 0)", label: "Marker", color: Arcade.line)
+                Spacer()
+                ScoreView(value: clockValue, label: "Uhr-Sync",
+                          color: studio.isOwner || studio.clock.isSynchronized ? Arcade.ok : Arcade.warn)
+            }
+            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            ForEach(Array(people.enumerated()), id: \.element.id) { index, p in
+                HStack(spacing: 12) {
+                    Monogram(name: p.displayName, color: SpeakerColors.color(for: index))
+                    VStack(alignment: .leading, spacing: 1) {
                         Text(p.displayName + (p.id == studio.identity.id ? " (ich)" : ""))
-                        if p.isOwner { Image(systemName: "crown.fill").foregroundStyle(.yellow) }
-                        Spacer()
-                        deliveryBadge(for: p.id)
+                            .font(Arcade.read(.callout).weight(.semibold))
+                            .foregroundStyle(Arcade.ink)
+                        Text([p.isOwner ? "Host" : "Gast", platform(p.platform)].joined(separator: " · "))
+                            .font(Arcade.chrome(10.5))
+                            .textCase(.uppercase)
+                            .tracking(1)
+                            .foregroundStyle(Arcade.muted)
                     }
-                    .font(.callout)
-                }
-                if let markers = studio.current?.markers, !markers.isEmpty {
-                    Divider()
-                    Text("\(markers.count) Marker").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    deliveryBadge(for: p.id)
                 }
             }
-        } label: {
-            Label("Session", systemImage: "person.3")
         }
     }
 
-    private var sharePlayLabel: String {
-        switch studio.sharePlay.status {
-        case .idle: return "nicht verbunden"
-        case .waiting: return "verbinde …"
-        case .joined: return "verbunden (\(studio.sharePlay.remoteParticipantCount + 1))"
-        case .invalidated: return "beendet"
-        }
+    private var clockValue: String {
+        if studio.isOwner { return "REF" }
+        guard let u = studio.clock.uncertainty else { return "--" }
+        return String(format: "%.0fms", u * 1000)
     }
 
-    private var clockLabel: String {
-        guard let u = studio.clock.uncertainty else { return "ausstehend" }
-        return String(format: "±%.0f ms", u * 1000)
+    private func platform(_ p: DevicePlatform) -> String {
+        switch p {
+        case .iOS: return "iPhone/iPad"
+        case .macOS: return "Mac"
+        case .other: return "Gerät"
+        }
     }
 
     @ViewBuilder private func deliveryBadge(for id: UUID) -> some View {
         switch studio.deliveryStatus.states[id] ?? .waiting {
         case .waiting: EmptyView()
-        case .uploading(let f): ProgressView(value: f).frame(width: 60)
-        case .available: Image(systemName: "icloud.and.arrow.down").foregroundStyle(.blue)
-        case .downloaded: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-        case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+        case .uploading(let f): Badge(text: "\(Int(f * 100))%", color: Arcade.line)
+        case .available: Badge(text: "Cloud", color: Arcade.line)
+        case .downloaded: Badge(text: "Da", color: Arcade.ok)
+        case .failed: Badge(text: "Fehler", color: Arcade.accentHot)
         }
+    }
+}
+
+private struct Badge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(Arcade.chrome(11, weight: .heavy))
+            .textCase(.uppercase)
+            .foregroundStyle(Arcade.accentInk)
+            .padding(.horizontal, 7).padding(.vertical, 3)
+            .background(color)
+    }
+}
+
+/// Arcade progress bar: cyan frame, yellow fill.
+struct ArcadeProgress: View {
+    let value: Double
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Rectangle().fill(Arcade.field)
+                Rectangle().fill(Arcade.accent).frame(width: geo.size.width * min(max(value, 0), 1))
+            }
+        }
+        .frame(height: 14)
+        .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 2))
+        .accessibilityValue("\(Int(value * 100)) Prozent")
     }
 }
 
@@ -66,92 +106,96 @@ struct DeliveryPanel: View {
     @Environment(StudioController.self) private var studio
 
     var body: some View {
-        GroupBox {
+        ArcadeSection(title: "Material", accent: studio.isOwner ? Arcade.accent : nil) {
             if studio.isOwner { ownerContent } else { participantContent }
-        } label: {
-            Label("Material", systemImage: "tray.and.arrow.down")
         }
     }
 
     @ViewBuilder private var ownerContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(studio.deliveryStatus.summary).font(.title3.weight(.semibold))
-                Spacer()
-                Button { Task { await studio.refreshDelivery() } } label: { Image(systemName: "arrow.clockwise") }
-                    .help("iCloud-Zone abfragen")
-            }
-            ProgressView(value: studio.deliveryStatus.overallProgress)
+        let status = studio.deliveryStatus
+        HStack(alignment: .center) {
+            ScoreView(value: "\(status.deliveredCount)/\(status.expectedCount)", label: "Tracks da",
+                      color: status.isComplete ? Arcade.ok : Arcade.accent)
+            Spacer()
+            Button("↻") { Task { await studio.refreshDelivery() } }
+                .buttonStyle(.arcade(.ghost, compact: true))
+                .help("iCloud-Zone abfragen")
+        }
+        ArcadeProgress(value: status.overallProgress)
 
-            if let progress = studio.exportProgress {
-                ProgressView(value: progress.fraction) { Text(progress.step).font(.caption) }
-            } else {
-                Button {
-                    Task { await studio.mixAndExport() }
-                } label: {
-                    Label("Mischen & exportieren (MP3)", systemImage: "waveform.badge.magnifyingglass")
-                }
-                .buttonStyle(.borderedProminent)
+        if let progress = studio.exportProgress {
+            VStack(alignment: .leading, spacing: 6) {
+                Eyebrow(progress.step, color: Arcade.accent)
+                ArcadeProgress(value: progress.fraction)
+            }
+        } else {
+            Button("Mischen & MP3 exportieren") { Task { await studio.mixAndExport() } }
+                .buttonStyle(.arcade)
                 .disabled(studio.mixableTracks.isEmpty || studio.isRecordingActive)
-            }
+        }
 
-            if !studio.exportedFiles.isEmpty {
-                Divider()
-                ForEach(studio.exportedFiles) { file in
-                    HStack {
-                        Image(systemName: file.speaker == nil ? "waveform" : "person.wave.2")
-                        VStack(alignment: .leading) {
-                            Text(file.url.lastPathComponent).font(.callout).lineLimit(1)
-                            if file.loudnessLUFS.isFinite {
-                                Text(String(format: "%.1f LUFS · Peak %.1f dBFS", file.loudnessLUFS, file.peakDB))
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
+        if !studio.exportedFiles.isEmpty {
+            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            ForEach(studio.exportedFiles) { file in
+                HStack(spacing: 10) {
+                    Text(file.url.pathExtension.uppercased())
+                        .font(Arcade.chrome(10, weight: .heavy))
+                        .foregroundStyle(Arcade.accentInk)
+                        .padding(.horizontal, 5).padding(.vertical, 3)
+                        .background(file.speaker == nil ? Arcade.accent : Arcade.line)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(file.url.deletingPathExtension().lastPathComponent)
+                            .font(Arcade.read(.callout)).foregroundStyle(Arcade.ink).lineLimit(1)
+                        if file.loudnessLUFS.isFinite {
+                            Text(String(format: "%.1f LUFS · Peak %.1f dBFS", file.loudnessLUFS, file.peakDB))
+                                .font(Arcade.chrome(10.5)).foregroundStyle(Arcade.muted)
                         }
-                        Spacer()
-                        ShareLink(item: file.url) { Image(systemName: "square.and.arrow.up") }
-                            .buttonStyle(.borderless)
                     }
+                    Spacer()
+                    ShareLink(item: file.url) { Text("Teilen") }
+                        .buttonStyle(.arcade(.ghost, compact: true))
                 }
-                #if os(macOS)
-                Button("Im Finder zeigen") {
-                    NSWorkspace.shared.activateFileViewerSelecting(studio.exportedFiles.map(\.url))
-                }
-                #endif
             }
+            #if os(macOS)
+            Button("Im Finder zeigen") {
+                NSWorkspace.shared.activateFileViewerSelecting(studio.exportedFiles.map(\.url))
+            }
+            .buttonStyle(.arcade(.ghost, compact: true))
+            #endif
+        }
 
-            if studio.current?.deliveryZoneName != nil {
-                Divider()
-                Button(role: .destructive) {
-                    Task { await studio.deleteDeliveryZone() }
-                } label: {
-                    Label("iCloud-Zone löschen (Speicher freigeben)", systemImage: "icloud.slash")
-                }
+        if studio.current?.deliveryZoneName != nil {
+            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            Button("iCloud-Zone löschen") { Task { await studio.deleteDeliveryZone() } }
+                .buttonStyle(.arcade(.danger, compact: true))
                 .disabled(studio.exportedFiles.isEmpty)
-                .help("Aufnahmen bleiben lokal erhalten. Erst nach dem Export möglich.")
-            }
+            Text("Gibt den iCloud-Speicher frei. Aufnahmen und Exporte bleiben lokal. Erst nach dem Export möglich.")
+                .font(Arcade.read(.caption)).foregroundStyle(Arcade.muted)
         }
     }
 
     @ViewBuilder private var participantContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            switch studio.uploadState {
-            case .idle:
-                Text(studio.current?.state == .finished || studio.current?.state == .recovered
-                     ? "Aufnahme bereit zum Hochladen." : "Nach der Aufnahme wird dein Track automatisch an den Host übertragen.")
-                    .font(.callout).foregroundStyle(.secondary)
-                if studio.current?.state == .finished || studio.current?.state == .recovered {
-                    Button("Jetzt hochladen") { Task { await studio.uploadLocalTrack() } }
-                }
-            case .waitingForShare:
-                Label("Warte auf iCloud-Freigabe des Hosts …", systemImage: "hourglass")
-            case .uploading(let f):
-                ProgressView(value: f) { Text("Lade hoch … \(Int(f * 100)) %") }
-            case .done:
-                Label("Track beim Host angekommen", systemImage: "checkmark.icloud").foregroundStyle(.green)
-            case .failed(let message):
-                Label(message, systemImage: "exclamationmark.icloud").foregroundStyle(.orange)
-                Button("Erneut versuchen") { Task { await studio.uploadLocalTrack() } }
+        let ready = studio.current?.state == .finished || studio.current?.state == .recovered
+        switch studio.uploadState {
+        case .idle:
+            Text(ready ? "Deine Spur ist bereit zum Hochladen."
+                       : "Nach der Aufnahme geht deine Spur automatisch an den Host.")
+                .font(Arcade.read(.callout)).foregroundStyle(Arcade.ink)
+            if ready {
+                Button("Jetzt hochladen") { Task { await studio.uploadLocalTrack() } }
+                    .buttonStyle(.arcade)
             }
+        case .waitingForShare:
+            Eyebrow("Warte auf iCloud-Freigabe des Hosts …", color: Arcade.warn)
+        case .uploading(let f):
+            ScoreView(value: "\(Int(f * 100))%", label: "Upload")
+            ArcadeProgress(value: f)
+        case .done:
+            ScoreView(value: "OK", label: "Spur beim Host", color: Arcade.ok)
+        case .failed(let message):
+            Text(message).font(Arcade.read(.callout)).foregroundStyle(Arcade.warn)
+            Button("Erneut versuchen") { Task { await studio.uploadLocalTrack() } }
+                .buttonStyle(.arcade)
         }
     }
 }

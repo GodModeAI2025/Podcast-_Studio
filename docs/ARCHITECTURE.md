@@ -57,12 +57,29 @@ AD1–AD6 aus der Spezifikation gelten unverändert. Zusätzlich:
   noch nicht vollständig für Strict Concurrency annotiert sind. Umstellen, sobald der Build
   warnungsfrei ist.
 
+## Gestaltung
+
+Optik und Layout lehnen sich an „Think Different, Think AI“ an (`docs/base.css`,
+`docs/landing.css` im Repo godmodeai2025/ThinkDifferentThinkAI) und sind in
+`PodStudio/Theme/Arcade.swift` als Tokens und Bausteine umgesetzt:
+
+* Farben 1:1 aus `:root` (`--bg #051a7a`, `--panel #071d8f`, `--ink #d8f8ff`, `--line #34d4ff`,
+  `--accent #ffcf24`, `--accent-hot #ff7a1a`, `--accent-ink #06145f`), immer Dark Mode.
+* Hintergrund: 135°-Verlauf mit cyanfarbenen Scanlines (2 px / 8 px) und gelbem 96-px-Raster.
+* „Chrome“-Schrift Courier New in Versalien für Überschriften, Labels, Kennzahlen und Buttons;
+  Fließtext (Drehbuch) in der proportionalen Systemschrift — wie auf der Website.
+* Panels (`.lp-card`) mit 4-px-Cyan-Kante und harten, unscharfen Schlagschatten; eckige Ecken.
+* Buttons (`.lp-btn`): gelber Block, dunkle 3-px-Kante, Schatten, der beim Drücken einrastet;
+  REC als roter Block, Ghost-Variante mit Cyan-Kante.
+* Kennzahlen (`.lp-score`): Timecode, „2/3 Tracks da“, Stimmen und Uhr-Sync als große gelbe Ziffern.
+* Zitate im Drehbuch als `.lp-quote`-Karte mit farbiger Oberkante; Monogramme je Sprecher.
+
 ## Offene Prüfpunkte
 
 | # | Punkt | Stand |
 |---|---|---|
 | O1 | MMCS für In-App-Video-Grid (Spez. §8.1) | offen; Basis-Architektur unberührt |
-| O2 | Video-Aufnahme (Spez. §8.2) | offen; lokale Kamera-Vorschau vorhanden |
+| O2 | Video-Aufnahme (Spez. §8.2) | **entschieden: kein Video.** Es wird nur Audio aufgenommen und exportiert; die Kamera dient ausschließlich als Selbstansicht (Preset `.medium`, kein Writer) |
 | O3 | Co-Editing Drehbuch (Spez. §8.3) | MVP: nur Owner editiert |
 | O4 | **LAME-Lizenz (LGPL)** bei statischem Linken im App Store | **vor Release klären**: Relinking ermöglichen (Objektdateien bereitstellen) oder LAME als dynamisches Framework ausliefern |
 | O5 | Gleichzeitige Mikrofonnutzung durch FaceTime und App während SharePlay | auf Gerät verifizieren; Voice Processing + `.videoChat` ist dafür ausgelegt. Fallback: SharePlay über Nachrichten ohne FaceTime-Call |
