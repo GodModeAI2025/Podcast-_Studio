@@ -73,41 +73,33 @@ struct TransportBar: View {
             switch studio.transport.phase {
             case .idle:
                 Button("● Rec") { studio.issue(.start) }
-                    .buttonStyle(.arcadeRec)
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                    .disabled(!studio.canIssue(.start))
+                    .buttonStyle(.arcade(.rec, fill: isPhone))
+                                        .disabled(!studio.canIssue(.start))
                     .keyboardShortcut("r", modifiers: .command)
                     .help(studio.canIssue(.start) ? "Aufnahme auf allen Geräten starten" : "Warte auf Uhren-Sync bzw. Session ist bereits aufgenommen")
             case .recording:
                 Button("Marker") { showMarker = true }
-                    .buttonStyle(.arcadeGhost)
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                    .keyboardShortcut("m", modifiers: .command)
+                    .buttonStyle(.arcade(.ghost, fill: isPhone))
+                                        .keyboardShortcut("m", modifiers: .command)
                 Button("Pause") { studio.issue(.pause) }
-                    .buttonStyle(.arcade)
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                Button("■ Stopp") { studio.issue(.stop) }
-                    .buttonStyle(.arcade(.danger))
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                    .keyboardShortcut(".", modifiers: .command)
+                    .buttonStyle(.arcade(.primary, fill: isPhone))
+                                    Button("■ Stopp") { studio.issue(.stop) }
+                    .buttonStyle(.arcade(.danger, fill: isPhone))
+                                        .keyboardShortcut(".", modifiers: .command)
             case .paused:
                 Button("Marker") { showMarker = true }
-                    .buttonStyle(.arcadeGhost)
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                Button("● Weiter") { studio.issue(.resume) }
-                    .buttonStyle(.arcadeRec)
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-                Button("■ Stopp") { studio.issue(.stop) }
-                    .buttonStyle(.arcade(.danger))
-                    .frame(maxWidth: isPhone ? .infinity : nil)
-            case .stopped:
+                    .buttonStyle(.arcade(.ghost, fill: isPhone))
+                                    Button("● Weiter") { studio.issue(.resume) }
+                    .buttonStyle(.arcade(.rec, fill: isPhone))
+                                    Button("■ Stopp") { studio.issue(.stop) }
+                    .buttonStyle(.arcade(.danger, fill: isPhone))
+                                case .stopped:
                 Text("Aufnahme beendet")
                     .font(Arcade.chrome(13, weight: .heavy))
                     .foregroundStyle(Arcade.ok)
             }
         }
-        .frame(maxWidth: isPhone ? .infinity : nil)
-    }
+            }
 
     private var isPhone: Bool {
         #if os(iOS)

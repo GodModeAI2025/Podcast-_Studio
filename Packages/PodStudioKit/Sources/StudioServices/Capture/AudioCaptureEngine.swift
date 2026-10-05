@@ -403,6 +403,12 @@ public final class TrackRecorder: @unchecked Sendable {
     }
 
     private var gainLinear: Float = 1
+    private var sink: (@Sendable (AVAudioPCMBuffer) -> Void)?
+
+    /// Receives the processed mono 48 kHz buffers (after gain), e.g. for live transcription.
+    public func setSink(_ sink: (@Sendable (AVAudioPCMBuffer) -> Void)?) {
+        lock.withLock { self.sink = sink }
+    }
 
     /// Digital input gain in dB (0...+30), applied before metering and writing.
     public func setInputGain(dB: Double) {
@@ -423,6 +429,14 @@ public final class TrackRecorder: @unchecked Sendable {
             for i in samples.indices { samples[i] = max(-1, min(1, samples[i] * gain)) }
         }
         onLevels?(samples, Double(n) / 48_000)
+        if let sink = lock.withLock({ self.sink }),
+           let copy = AVAudioPCMBuffer(pcmFormat: Self.targetFormat, frameCapacity: AVAudioFrameCount(n)) {
+            copy.frameLength = AVAudioFrameCount(n)
+            samples.withUnsafeBufferPointer { src in
+                copy.floatChannelData![0].update(from: src.baseAddress!, count: n)
+            }
+            sink(copy)
+        }
 
         let (output, w) = lock.withLock {
             (scheduler.process(bufferStart: bufferStart, frameCount: n, sampleRate: 48_000), writer)

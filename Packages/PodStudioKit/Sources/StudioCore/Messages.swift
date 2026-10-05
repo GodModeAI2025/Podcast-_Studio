@@ -65,6 +65,9 @@ public enum SessionMessage: Codable, Sendable, Equatable {
     /// Owner → all: CKShare URL of the delivery zone (only ever sent inside the
     /// end-to-end encrypted SharePlay session).
     case deliveryShare(url: URL, sessionID: UUID)
+    /// A finished sentence, transcribed on the speaker's own device. Lets the host see
+    /// everybody's words for the fact check and the script coverage.
+    case transcript(TranscriptLine)
 }
 
 public enum MessageCodecError: Error, Equatable {

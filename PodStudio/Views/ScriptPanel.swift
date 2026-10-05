@@ -12,14 +12,17 @@ struct ScriptPanel: View {
     @State private var draft = ""
     @State private var localSection = 0
     @State private var importing = false
+    @State private var tick = 0
 
     private var activeSection: Int {
         studio.isOwner || !studio.followOwner ? localSection : studio.ownerSection
     }
 
     var body: some View {
+        let report = studio.coverage
         VStack(spacing: 0) {
-            header
+            header(report)
+            if !report.forgotten.isEmpty { forgottenBanner(report) }
             if editing {
                 TextEditor(text: $draft)
                     .font(.system(.body, design: .monospaced))
@@ -31,9 +34,10 @@ struct ScriptPanel: View {
                     .padding(18)
                     .onChange(of: draft) { _, text in studio.updateScript(text) }
             } else {
-                reader
+                reader(report)
             }
         }
+        .onReceive(Timer.publish(every: 10, on: .main, in: .common).autoconnect()) { _ in tick &+= 1 }
         .onChange(of: studio.ownerSection) { _, s in if !studio.isOwner { localSection = s } }
         .fileImporter(isPresented: $importing,
                       allowedContentTypes: [UTType("net.daringfireball.markdown"), .plainText, .text].compactMap { $0 }) { result in
@@ -49,8 +53,21 @@ struct ScriptPanel: View {
         }
     }
 
-    private var header: some View {
-        HStack(spacing: 12) {
+    private func forgottenBanner(_ report: TopicCoverage.Report) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Arcade.warn)
+            Text("Noch nicht besprochen: " + report.forgotten.map { $0.title.isEmpty ? "Einstieg" : $0.title }.joined(separator: ", "))
+                .font(Arcade.read(.callout)).foregroundStyle(Arcade.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 22).padding(.vertical, 12)
+        .background(Arcade.warn.opacity(0.14))
+    }
+
+    private func header(_ report: TopicCoverage.Report) -> some View {
+        _ = tick
+        return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Eyebrow("Drehbuch · Rev. \(studio.script.revision)")
                 if let title = studio.parsedScript.sections.first(where: { $0.id == activeSection })?.title {
@@ -81,12 +98,13 @@ struct ScriptPanel: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Arcade.hairline).frame(height: 1) }
     }
 
-    private var reader: some View {
+    private func reader(_ report: TopicCoverage.Report) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(studio.parsedScript.blocks) { block in
-                        BlockView(block: block, highlighted: block.section == activeSection)
+                        BlockView(block: block, highlighted: block.section == activeSection,
+                                  status: report.status(for: block.section))
                             .id(block.id)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -130,6 +148,7 @@ struct ScriptPanel: View {
 private struct BlockView: View {
     let block: ScriptBlock
     let highlighted: Bool
+    var status: TopicCoverage.Status?
 
     var body: some View {
         content
@@ -147,11 +166,14 @@ private struct BlockView: View {
     @ViewBuilder private var content: some View {
         switch block.kind {
         case .heading(let level):
-            Text(inline(block.text))
-                .arcadeHeadline(level == 1 ? 30 : level == 2 ? 21 : 16,
-                                color: level <= 2 ? Arcade.accent : Arcade.line,
-                                shadow: level == 1 ? 4 : 2)
-                .padding(.top, level <= 2 ? 14 : 6)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(inline(block.text))
+                    .arcadeHeadline(level == 1 ? 30 : level == 2 ? 21 : 16,
+                                    color: level <= 2 ? Arcade.accent : Arcade.line,
+                                    shadow: level == 1 ? 4 : 2)
+                if level == 2, let status { CoverageChip(status: status) }
+            }
+            .padding(.top, level <= 2 ? 14 : 6)
         case .paragraph:
             Text(inline(block.text)).font(Arcade.read(.title3)).foregroundStyle(Arcade.ink)
                 .lineSpacing(5)
@@ -192,5 +214,28 @@ private struct BlockView: View {
         (try? AttributedString(markdown: markdown,
                                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
             ?? AttributedString(markdown)
+    }
+}
+
+
+/// Small status pill next to a script section: covered / partly / forgotten.
+struct CoverageChip: View {
+    let status: TopicCoverage.Status
+
+    var body: some View {
+        switch status {
+        case .covered: chip("Besprochen", "checkmark.circle.fill", Arcade.ok)
+        case .partial: chip("Teilweise besprochen", "circle.lefthalf.filled", Arcade.line)
+        case .forgotten: chip("Vergessen?", "exclamationmark.triangle.fill", Arcade.warn)
+        case .open: EmptyView()
+        }
+    }
+
+    private func chip(_ text: String, _ icon: String, _ color: Color) -> some View {
+        Label(text, systemImage: icon)
+            .font(Arcade.chrome(12, weight: .bold))
+            .foregroundStyle(Arcade.accentInk)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background(Capsule().fill(color))
     }
 }

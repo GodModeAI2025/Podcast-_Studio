@@ -22,6 +22,7 @@ struct StudioView: View {
     enum Panel: String, CaseIterable, Identifiable {
         case start = "Start"
         case script = "Drehbuch"
+        case facts = "Fakten"
         case mic = "Mikro"
         case status = "Session"
         case delivery = "Material"
@@ -60,6 +61,7 @@ struct StudioView: View {
                     NextStepsPanel(dismissed: $stepsDismissed)
                     SelfView(camera: camera)
                     MicPanel()
+                    FactsPanel()
                     SessionStatusPanel()
                     DeliveryPanel()
                 }
@@ -90,6 +92,7 @@ struct StudioView: View {
                 switch current {
                 case .start: ScrollView { NextStepsPanel(dismissed: $stepsDismissed).padding(16) }
                 case .script: ScriptPanel()
+                case .facts: ScrollView { FactsPanel().padding(16) }
                 case .mic: ScrollView { MicPanel().padding(16) }
                 case .status: ScrollView { VStack(spacing: 20) { SessionStatusPanel(); SelfView(camera: camera) }.padding(16) }
                 case .delivery: ScrollView { DeliveryPanel().padding(16) }

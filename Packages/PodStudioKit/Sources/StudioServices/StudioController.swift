@@ -85,6 +85,19 @@ public final class StudioController {
     public var errorMessage: String?
     public var exportOptions = ExportOptions()
 
+    // Live fact check + script coverage (opt-in)
+    public let transcriber = LiveTranscriber()
+    public let facts = FactCheckService()
+    public private(set) var transcript: [TranscriptLine] = []
+    public var factCheckEnabled: Bool = UserDefaults.standard.bool(forKey: "factCheckEnabled") {
+        didSet {
+            guard oldValue != factCheckEnabled else { return }
+            UserDefaults.standard.set(factCheckEnabled, forKey: "factCheckEnabled")
+            facts.setEnabled(factCheckEnabled && isOwner)
+            if factCheckEnabled { if isRecordingActive { startLiveAnalysis() } } else { stopLiveAnalysis() }
+        }
+    }
+
     private var participantIDs: [Participant.ID: UUID] = [:]
     private var shareURL: URL?
     private var sharedZoneID: CKRecordZone.ID?
@@ -107,6 +120,51 @@ public final class StudioController {
     public var elapsed: TimeInterval { transport.elapsed(at: sharedNow) }
     public var isInSharePlay: Bool { sharePlay.status == .joined || sharePlay.status == .waiting }
     public var isRecordingActive: Bool { transport.phase == .recording || transport.phase == .paused }
+
+    /// Which script topics were covered; hints only while the episode is shorter than 45 minutes.
+    public var coverage: TopicCoverage.Report {
+        TopicCoverage.evaluate(script: parsedScript, transcript: transcript.map(\.text).joined(separator: " "),
+                               readingSection: ownerSection, elapsed: elapsed)
+    }
+
+    // MARK: Live analysis (transcription → fact check, coverage)
+
+    private func startLiveAnalysis() {
+        guard factCheckEnabled else { return }
+        capture.recorder.setSink(transcriber.sink)
+        transcriber.onSentence = { [weak self] text in self?.addSpoken(text) }
+        facts.setEnabled(isOwner)
+        Task { await transcriber.start() }
+    }
+
+    private func stopLiveAnalysis() {
+        capture.recorder.setSink(nil)
+        Task { await transcriber.stop() }
+    }
+
+    private func addSpoken(_ text: String) {
+        let line = TranscriptLine(speakerID: identity.id, speakerName: identity.displayName, text: text, at: elapsed)
+        appendTranscript(line)
+        sharePlay.post(.transcript(line))
+    }
+
+    private func appendTranscript(_ line: TranscriptLine) {
+        guard !transcript.contains(where: { $0.id == line.id }) else { return }
+        transcript.append(line)
+        saveTranscript()
+        if isOwner { facts.ingest(line, topic: current?.title ?? "") }
+    }
+
+    private func saveTranscript() {
+        guard let id = current?.id else { return }
+        let url = store.directory(for: id).appendingPathComponent("transcript.json")
+        try? JSONEncoder().encode(transcript).write(to: url, options: .atomic)
+    }
+
+    private func loadTranscript(for id: UUID) -> [TranscriptLine] {
+        let url = store.directory(for: id).appendingPathComponent("transcript.json")
+        return (try? JSONDecoder().decode([TranscriptLine].self, from: Data(contentsOf: url))) ?? []
+    }
 
     // MARK: Startup
 
@@ -167,6 +225,9 @@ public final class StudioController {
         transport = TransportState()
         participants = Dictionary(uniqueKeysWithValues: manifest.participants.map { ($0.id, $0) })
         participants[identity.id] = me
+        transcript = loadTranscript(for: manifest.id)
+        facts.reset()
+        facts.setEnabled(factCheckEnabled && manifest.isOwner)
         deliveryStatus = DeliveryStatus(expected: Array(participants.values).sorted { $0.displayName < $1.displayName })
         for track in manifest.receivedTracks { deliveryStatus.update(track.participantID, to: .downloaded) }
         exportedFiles = existingExports(for: manifest)
@@ -313,6 +374,9 @@ public final class StudioController {
                 mutate { $0.localTrack?.clockOffset = offset }
             }
 
+        case .transcript(let line):
+            appendTranscript(line)
+
         case .deliveryShare(let url, let sessionID):
             guard sessionID == current?.id, !isOwner else { return }
             shareURL = url
@@ -436,6 +500,12 @@ public final class StudioController {
                 return
             }
         }
+        switch action {
+        case .start: startLiveAnalysis()
+        case .pause: transcriber.pause(true)
+        case .resume: transcriber.pause(false)
+        case .stop: break
+        }
         capture.recorder.schedule(action, atLocal: clock.localTime(fromShared: sharedTime), window: window)
         mutate {
             $0.windows = transport.windows
@@ -473,6 +543,8 @@ public final class StudioController {
         while HostClock.now() < localStop + 0.3 || capture.recorder.isRecording {
             try? await Task.sleep(for: .milliseconds(100))
         }
+        stopLiveAnalysis()
+        if isOwner, factCheckEnabled { facts.checkNow(topic: current?.title ?? "") }
         do {
             try capture.recorder.close()
         } catch {

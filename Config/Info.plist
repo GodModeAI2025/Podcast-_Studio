@@ -5,6 +5,8 @@
 	<!-- Merged with the generated Info.plist (GENERATE_INFOPLIST_FILE = YES). -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>PodStudio wandelt dein Gesprochenes auf dem Gerät in Text um, damit Fakten geprüft und Drehbuch-Themen abgehakt werden können.</string>
 	<key>NSSupportsGroupActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>

@@ -162,6 +162,8 @@ struct ArcadeButtonStyle: ButtonStyle {
     enum Kind { case primary, ghost, rec, danger }
     var kind: Kind = .primary
     var compact = false
+    /// Stretch the label to the full available width (iPhone transport row).
+    var fill = false
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -170,6 +172,7 @@ struct ArcadeButtonStyle: ButtonStyle {
             .font(Arcade.chrome(compact ? 15 : 17, weight: .semibold, relativeTo: .callout))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
+            .frame(maxWidth: fill ? .infinity : nil)
             .padding(.horizontal, compact ? 16 : 24)
             .padding(.vertical, compact ? 10 : 14)
             .frame(minHeight: compact ? 44 : 54)
@@ -206,8 +209,8 @@ extension ButtonStyle where Self == ArcadeButtonStyle {
     static var arcade: ArcadeButtonStyle { ArcadeButtonStyle() }
     static var arcadeGhost: ArcadeButtonStyle { ArcadeButtonStyle(kind: .ghost) }
     static var arcadeRec: ArcadeButtonStyle { ArcadeButtonStyle(kind: .rec) }
-    static func arcade(_ kind: ArcadeButtonStyle.Kind, compact: Bool = false) -> ArcadeButtonStyle {
-        ArcadeButtonStyle(kind: kind, compact: compact)
+    static func arcade(_ kind: ArcadeButtonStyle.Kind, compact: Bool = false, fill: Bool = false) -> ArcadeButtonStyle {
+        ArcadeButtonStyle(kind: kind, compact: compact, fill: fill)
     }
 }
 
