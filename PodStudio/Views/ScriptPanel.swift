@@ -23,9 +23,9 @@ struct ScriptPanel: View {
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(Arcade.ink)
                     .scrollContentBackground(.hidden)
-                    .padding(12)
-                    .background(Arcade.field)
-                    .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
+                    .padding(14)
+                    .background(RoundedRectangle(cornerRadius: Arcade.radius, style: .continuous).fill(Arcade.field))
+                    .overlay(RoundedRectangle(cornerRadius: Arcade.radius, style: .continuous).strokeBorder(Arcade.hairline, lineWidth: 1))
                     .padding(18)
                     .onChange(of: draft) { _, text in studio.updateScript(text) }
             } else {
@@ -42,7 +42,6 @@ struct ScriptPanel: View {
                 if let title = studio.parsedScript.sections.first(where: { $0.id == activeSection })?.title {
                     Text(title)
                         .font(Arcade.chrome(14, weight: .heavy))
-                        .textCase(.uppercase)
                         .foregroundStyle(Arcade.ink)
                         .lineLimit(1)
                 }
@@ -62,7 +61,7 @@ struct ScriptPanel: View {
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 14)
-        .overlay(alignment: .bottom) { Rectangle().fill(Arcade.line.opacity(0.3)).frame(height: 2) }
+        .overlay(alignment: .bottom) { Rectangle().fill(Arcade.hairline).frame(height: 1) }
     }
 
     private var reader: some View {
@@ -97,8 +96,8 @@ struct ScriptPanel: View {
     /// Owner: step through sections (teleprompter style).
     private var sectionStepper: some View {
         HStack(spacing: 10) {
-            Button("▲") { step(-1) }.buttonStyle(.arcade(.ghost, compact: true))
-            Button("▼ Weiter") { step(1) }.buttonStyle(.arcade(.primary, compact: true))
+            Button { step(-1) } label: { Image(systemName: "chevron.up") }.buttonStyle(.arcade(.ghost, compact: true))
+            Button { step(1) } label: { Label("Weiter", systemImage: "chevron.down") }.buttonStyle(.arcade(.primary, compact: true))
                 .keyboardShortcut(.downArrow, modifiers: [.command])
         }
     }
@@ -121,9 +120,10 @@ private struct BlockView: View {
             .padding(.vertical, 4)
             .padding(.leading, 14)
             .padding(.trailing, 8)
-            .background(highlighted ? Arcade.panelStrong.opacity(0.55) : .clear)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(highlighted ? Arcade.panelStrong.opacity(0.7) : .clear))
             .overlay(alignment: .leading) {
-                Rectangle().fill(highlighted ? Arcade.accentHot : .clear).frame(width: 4)
+                Capsule().fill(highlighted ? Arcade.accent : .clear).frame(width: 4).padding(.vertical, 6)
             }
     }
 
@@ -140,7 +140,7 @@ private struct BlockView: View {
                 .lineSpacing(5)
         case .bullet:
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("▸").font(Arcade.chrome(16)).foregroundStyle(Arcade.accent)
+                Text("•").font(Arcade.chrome(18)).foregroundStyle(Arcade.accent)
                 Text(inline(block.text)).font(Arcade.read(.title3)).foregroundStyle(Arcade.ink)
             }
         case .numbered(let n):
@@ -154,9 +154,8 @@ private struct BlockView: View {
                 Text("“").font(Arcade.chrome(44, weight: .heavy)).foregroundStyle(Arcade.accentHot.opacity(0.55))
                     .frame(height: 22, alignment: .top)
                 Text(inline(block.text))
-                    .font(Arcade.chrome(18, weight: .bold))
-                    .foregroundStyle(Arcade.accentHot)
-                    .shadow(color: Arcade.accentInk, radius: 0, x: 2, y: 2)
+                    .font(Arcade.chrome(20, weight: .semibold))
+                    .foregroundStyle(Arcade.accent)
             }
             .arcadePanel(accentTop: Arcade.accentHot, padding: 16)
             .padding(.vertical, 4)
@@ -166,9 +165,9 @@ private struct BlockView: View {
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Arcade.field)
-                .overlay(Rectangle().strokeBorder(Arcade.line.opacity(0.5), lineWidth: 2))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         case .rule:
-            Rectangle().fill(Arcade.line).frame(height: 3).padding(.vertical, 6)
+            Rectangle().fill(Arcade.hairline).frame(height: 1).padding(.vertical, 10)
         }
     }
 

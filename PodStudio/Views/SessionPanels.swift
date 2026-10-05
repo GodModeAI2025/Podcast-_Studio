@@ -24,7 +24,7 @@ struct SessionStatusPanel: View {
                 ScoreView(value: clockValue, label: "Uhr-Sync",
                           color: studio.isOwner || studio.clock.isSynchronized ? Arcade.ok : Arcade.warn)
             }
-            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            Rectangle().fill(Arcade.hairline).frame(height: 1)
             ForEach(Array(people.enumerated()), id: \.element.id) { index, p in
                 HStack(spacing: 12) {
                     Monogram(name: p.displayName, color: SpeakerColors.color(for: index))
@@ -34,8 +34,6 @@ struct SessionStatusPanel: View {
                             .foregroundStyle(Arcade.ink)
                         Text([p.isOwner ? "Host" : "Gast", platform(p.platform)].joined(separator: " · "))
                             .font(Arcade.chrome(12))
-                            .textCase(.uppercase)
-                            .tracking(1)
                             .foregroundStyle(Arcade.muted)
                     }
                     Spacer()
@@ -77,10 +75,9 @@ private struct Badge: View {
     var body: some View {
         Text(text)
             .font(Arcade.chrome(12, weight: .heavy))
-            .textCase(.uppercase)
             .foregroundStyle(Arcade.accentInk)
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(color)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Capsule().fill(color))
     }
 }
 
@@ -91,12 +88,11 @@ struct ArcadeProgress: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Rectangle().fill(Arcade.field)
-                Rectangle().fill(Arcade.accent).frame(width: geo.size.width * min(max(value, 0), 1))
+                Capsule().fill(Arcade.field)
+                Capsule().fill(Arcade.accent).frame(width: max(14, geo.size.width * min(max(value, 0), 1)))
             }
         }
-        .frame(height: 14)
-        .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 2))
+        .frame(height: 12)
         .accessibilityValue("\(Int(value * 100)) Prozent")
     }
 }
@@ -135,7 +131,7 @@ struct DeliveryPanel: View {
         }
 
         if !studio.exportedFiles.isEmpty {
-            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            Rectangle().fill(Arcade.hairline).frame(height: 1)
             ForEach(studio.exportedFiles) { file in
                 HStack(spacing: 10) {
                     Text(file.url.pathExtension.uppercased())
@@ -165,7 +161,7 @@ struct DeliveryPanel: View {
         }
 
         if studio.current?.deliveryZoneName != nil {
-            Rectangle().fill(Arcade.line.opacity(0.24)).frame(height: 2)
+            Rectangle().fill(Arcade.hairline).frame(height: 1)
             Button("iCloud-Zone löschen") { Task { await studio.deleteDeliveryZone() } }
                 .buttonStyle(.arcade(.danger, compact: true))
                 .disabled(studio.exportedFiles.isEmpty)

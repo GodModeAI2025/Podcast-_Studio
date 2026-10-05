@@ -50,7 +50,7 @@ struct StudioView: View {
                 .padding(22)
             }
             .frame(minWidth: 340, idealWidth: 400, maxWidth: 460)
-            Rectangle().fill(Arcade.line).frame(width: Arcade.edge)
+            Rectangle().fill(Arcade.hairline).frame(width: 1)
             ScriptPanel()
         }
     }
@@ -92,8 +92,7 @@ struct StudioTopBar: View {
                 .padding(.horizontal, 22)
                 .padding(.vertical, 12)
                 .background(Arcade.bar)
-            Rectangle().fill(Arcade.barEdge).frame(height: 4)
-            Rectangle().fill(Arcade.line).frame(height: 4)
+            Rectangle().fill(Arcade.hairline).frame(height: 1)
         }
     }
 
@@ -103,8 +102,6 @@ struct StudioTopBar: View {
                 Eyebrow(studio.isOwner ? "Host · Session" : "Gast · Session")
                 Text(studio.current?.title ?? "")
                     .font(Arcade.chrome(18, weight: .heavy, relativeTo: .headline))
-                    .textCase(.uppercase)
-                    .tracking(1)
                     .foregroundStyle(Arcade.ink)
                     .lineLimit(1)
             }
@@ -131,11 +128,9 @@ struct StudioTopBar: View {
     @ViewBuilder private var liveBadge: some View {
         let live = studio.sharePlay.status == .joined
         HStack(spacing: 6) {
-            Rectangle().fill(live ? Arcade.ok : Arcade.muted.opacity(0.5)).frame(width: 8, height: 8)
+            Circle().fill(live ? Arcade.ok : Arcade.muted.opacity(0.5)).frame(width: 9, height: 9)
             Text(live ? "Live · \(studio.sharePlay.remoteParticipantCount + 1)" : "Offline")
                 .font(Arcade.chrome(11, weight: .heavy))
-                .textCase(.uppercase)
-                .tracking(2)
                 .foregroundStyle(live ? Arcade.ok : Arcade.muted)
         }
     }
@@ -155,7 +150,7 @@ struct SelfView: View {
                     CameraPreview(session: camera.session)
                 } else {
                     VStack(spacing: 8) {
-                        Text("[ KAMERA AUS ]").font(Arcade.chrome(14, weight: .heavy))
+                        Text("Kamera aus").font(Arcade.chrome(14, weight: .heavy))
                         Text("Nur Vorschau · es wird nur Audio aufgenommen")
                             .font(Arcade.read(.caption))
                     }
@@ -166,7 +161,6 @@ struct SelfView: View {
                     Monogram(name: studio.identity.displayName)
                     Text(studio.identity.displayName)
                         .font(Arcade.chrome(12, weight: .heavy))
-                        .textCase(.uppercase)
                         .foregroundStyle(Arcade.ink)
                     Spacer()
                     SegmentMeter(meter: studio.capture.meter, segments: 12)
@@ -176,9 +170,8 @@ struct SelfView: View {
                 .background(Arcade.bar.opacity(0.85))
             }
             .aspectRatio(16 / 9, contentMode: .fit)
-            .clipped()
-            .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: Arcade.edge))
-            .modifier(HardShadow(offset: Arcade.dropLarge))
+            .clipShape(RoundedRectangle(cornerRadius: Arcade.radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Arcade.radius, style: .continuous).strokeBorder(Arcade.hairline, lineWidth: 1))
 
             HStack {
                 Toggle("Selbstansicht", isOn: $showCamera)
@@ -191,7 +184,6 @@ struct SelfView: View {
                 if studio.isInSharePlay {
                     Text("Gäste sehen & hören: FaceTime")
                         .font(Arcade.chrome(11))
-                        .textCase(.uppercase)
                         .foregroundStyle(Arcade.muted)
                 }
             }

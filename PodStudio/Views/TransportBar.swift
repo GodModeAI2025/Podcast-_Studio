@@ -11,7 +11,7 @@ struct TransportBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle().fill(Arcade.line).frame(height: Arcade.edge)
+            Rectangle().fill(Arcade.hairline).frame(height: 1)
             HStack(spacing: 18) {
                 TimelineView(.periodic(from: .now, by: 0.1)) { _ in
                     HStack(spacing: 12) {
@@ -20,8 +20,7 @@ struct TransportBar: View {
                             .font(Arcade.chrome(34, weight: .heavy, relativeTo: .title))
                             .monospacedDigit()
                             .foregroundStyle(studio.transport.phase == .recording ? Arcade.accent : Arcade.ink)
-                            .shadow(color: Arcade.accentInk, radius: 0, x: 3, y: 3)
-                    }
+                                                }
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Eyebrow(phaseLabel, color: studio.transport.phase == .recording ? Arcade.rec : Arcade.muted)
@@ -75,7 +74,6 @@ struct TransportBar: View {
             case .stopped:
                 Text("Aufnahme beendet")
                     .font(Arcade.chrome(13, weight: .heavy))
-                    .textCase(.uppercase)
                     .foregroundStyle(Arcade.ok)
             }
         }
@@ -103,10 +101,9 @@ private struct RecLamp: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
             let on = active && Int(context.date.timeIntervalSinceReferenceDate * 2) % 2 == 0
-            Rectangle()
+            Circle()
                 .fill(on ? Arcade.rec : Arcade.rec.opacity(active ? 0.35 : 0.15))
                 .frame(width: 16, height: 16)
-                .overlay(Rectangle().strokeBorder(Arcade.accentInk, lineWidth: 2))
         }
         .accessibilityLabel(active ? "Aufnahme läuft" : "Keine Aufnahme")
     }

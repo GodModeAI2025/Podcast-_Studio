@@ -111,7 +111,7 @@ struct SessionListView: View {
 
                 Eyebrow("Sessions · \(studio.sessions.count)")
                     .padding(.bottom, 8)
-                Rectangle().fill(Arcade.line).frame(height: 3)
+                Rectangle().fill(Arcade.hairline).frame(height: 1)
 
                 ForEach(studio.sessions) { session in
                     row(session)
@@ -143,7 +143,6 @@ struct SessionListView: View {
             HStack(alignment: .top, spacing: 12) {
                 Text(session.isOwner ? "HOST" : "GAST")
                     .font(Arcade.chrome(10, weight: .heavy))
-                    .tracking(1)
                     .foregroundStyle(session.isOwner ? Arcade.accentInk : Arcade.ink)
                     .padding(.horizontal, 5).padding(.vertical, 3)
                     .background(session.isOwner ? Arcade.accent : Arcade.panelStrong)
@@ -158,20 +157,14 @@ struct SessionListView: View {
                         Text(stateLabel(session.state))
                     }
                     .font(Arcade.chrome(11))
-                    .textCase(.uppercase)
                     .foregroundStyle(session.state == .recording ? Arcade.rec : Arcade.muted)
                 }
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 8)
-            .background(selected ? Arcade.panelStrong : .clear)
-            .overlay(alignment: .leading) {
-                if selected { Rectangle().fill(Arcade.accent).frame(width: 4) }
-            }
-            .overlay(alignment: .bottom) {
-                Rectangle().fill(Arcade.line.opacity(0.16)).frame(height: 1)
-            }
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(selected ? Arcade.panelStrong : .clear))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -208,9 +201,7 @@ struct SettingsView: View {
                             .textFieldStyle(.plain)
                             .font(Arcade.chrome(16))
                             .foregroundStyle(Arcade.ink)
-                            .padding(12)
-                            .background(Arcade.field)
-                            .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
+                            .arcadeField()
                             .onSubmit { studio.rename(name) }
                         Text("So sehen dich die anderen in der Session und in den Dateinamen.")
                             .font(Arcade.read(.caption)).foregroundStyle(Arcade.muted)
@@ -235,7 +226,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Account").font(Arcade.read()).foregroundStyle(Arcade.ink)
                             Spacer()
-                            Text(accountLabel).font(Arcade.chrome(13)).textCase(.uppercase)
+                            Text(accountLabel).font(Arcade.chrome(13))
                                 .foregroundStyle(studio.delivery.accountStatus == .available ? Arcade.ok : Arcade.warn)
                         }
                     }

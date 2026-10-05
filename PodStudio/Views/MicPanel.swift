@@ -19,12 +19,9 @@ struct MicPanel: View {
                         .foregroundStyle(Arcade.ink)
                         .lineLimit(1)
                     Spacer()
-                    Text("▼").font(Arcade.chrome(12)).foregroundStyle(Arcade.accent)
+                    Image(systemName: "chevron.up.chevron.down").font(.footnote.weight(.semibold)).foregroundStyle(Arcade.accent)
                 }
-                .padding(14)
-                .frame(minHeight: 48)
-                .background(Arcade.field)
-                .overlay(Rectangle().strokeBorder(Arcade.line, lineWidth: 3))
+                .arcadeField()
             }
             .menuStyle(.button)
             .buttonStyle(.plain)
@@ -36,7 +33,7 @@ struct MicPanel: View {
                 HStack {
                     Text("RMS \(dB(capture.meter.rmsDB))")
                     Spacer()
-                    Text(capture.meter.clipped ? "CLIP!" : "Peak \(dB(capture.meter.peakHoldDB))")
+                    Text(capture.meter.clipped ? "Übersteuert" : "Peak \(dB(capture.meter.peakHoldDB))")
                         .foregroundStyle(capture.meter.clipped ? Arcade.rec : Arcade.muted)
                 }
                 .font(Arcade.chrome(13))
@@ -92,7 +89,7 @@ struct SegmentMeter: View {
             let peak = Int((LevelMeter.normalized(meter.peakHoldDB) * Double(segments)).rounded()) - 1
             HStack(spacing: gap) {
                 ForEach(0..<segments, id: \.self) { i in
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(color(i).opacity(i < lit || i == peak ? 1 : 0.16))
                         .frame(width: w)
                 }

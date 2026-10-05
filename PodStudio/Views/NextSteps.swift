@@ -67,8 +67,7 @@ struct NextStepsPanel: View {
                 .font(Arcade.chrome(15, weight: .heavy))
                 .foregroundStyle(Arcade.accentInk)
                 .frame(width: 36, height: 36)
-                .background(done ? Arcade.ok : Arcade.accent)
-                .overlay(Rectangle().strokeBorder(Arcade.accentInk, lineWidth: 2))
+                .background(Circle().fill(done ? Arcade.ok : Arcade.accent))
             VStack(alignment: .leading, spacing: 6) {
                 Text(title).font(Arcade.read(.headline)).foregroundStyle(Arcade.ink)
                 Text(text).font(Arcade.read(.callout)).foregroundStyle(Arcade.muted)
