@@ -23,7 +23,7 @@ struct FactsPanel: View {
         return ArcadeSection(title: "Faktencheck live", accent: studio.factCheckEnabled ? Arcade.ok : nil) {
             Toggle("Mithören und Fakten prüfen", isOn: $studio.factCheckEnabled)
                 .toggleStyle(.arcade)
-            Text("Dein Mikrofon wird auf dem Gerät in Text umgewandelt. Nur kurze Textausschnitte gehen zur Prüfung an Apples Private Cloud Compute und an Wikipedia bzw. eine Websuche. Audio verlässt das Gerät nicht. Nur der Host führt die Prüfung aus, die anderen schicken ihre Sätze an ihn.")
+            Text("Dein Mikrofon wird auf dem Gerät in Text umgewandelt. Nur kurze Textausschnitte gehen zur Prüfung an Apples Private Cloud Compute. Zur Recherche fragt sie außerdem Wikipedia und DuckDuckGo mit kurzen Suchbegriffen ab. Audio verlässt das Gerät dafür nicht. Nur der Host prüft, die anderen schicken ihre Sätze an ihn. Du kannst das jederzeit ausschalten.")
                 .font(Arcade.read(.footnote)).foregroundStyle(Arcade.muted)
                 .fixedSize(horizontal: false, vertical: true)
             if studio.factCheckEnabled {
